@@ -1,0 +1,21 @@
+name: Auto-add Team 6 to SI-2026-I
+
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Add item to SI-2026-I
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ITEM_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+        run: |
+          gh project item-add 1 \
+            --owner computing-laboratory \
+            --url "$ITEM_URL"
