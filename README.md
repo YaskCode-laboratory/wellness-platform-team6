@@ -67,14 +67,26 @@ wellness-platform-team6/
 ├── prompts/          # Prompts del sistema utilizados por el Agente IA
 ├── scripts/          # Scripts de automatización y despliegue en AWS EC2
 ├── src/
-│   ├── backend/      # API RESTful con FastAPI, Uvicorn y base de datos NoSQL
-│   └── frontend/     # Aplicación web SPA con React, Vite y CSS Emil Kowalski Style
+│   ├── backend/      # [OFICIAL] API RESTful con FastAPI, Uvicorn y base de datos NoSQL
+│   └── frontend/     # [OFICIAL] Aplicación web SPA con React, Vite y CSS Emil Kowalski Style
 ├── tests/            # Suite de pruebas unitarias e integración
-├── .env.example      # Plantilla de variables de entorno
+├── .env.example      # Plantilla de variables de entorno (con placeholders ficticios)
 ├── CHANGELOG.md      # Registro de cambios del proyecto
 ├── LICENSE           # Licencia del proyecto (MIT)
 └── README.md         # Documentación principal
 ```
+
+---
+
+## 📐 Declaración de la Estructura Oficial de Desarrollo y Despliegue
+
+> ℹ️ **Nota de Arquitectura y Evaluación Académica (Maestría en TIC)**:
+> 
+> La estructura de código fuente oficial y única para el desarrollo y despliegue del proyecto se encuentra ubicada en el directorio **`src/`**:
+> - **Backend Oficial (`src/backend/`)**: Contiene los microservicios RESTful con FastAPI, conectores a Google Cloud Firestore y motor de Agentes IA.
+> - **Frontend Oficial (`src/frontend/`)**: Contiene la interfaz gráfica SPA con React 18, Vite y el sistema de diseño Emil Kowalski.
+> 
+> **Eliminación de Estructuras Anteriores**: Se han removido definitivamente las carpetas duplicadas raíz `backend/` y `frontend/` para garantizar un árbol de proyecto impecable, evitar ambigüedades en las ejecuciones de Docker/CI-CD y cumplir estrictamente con los estándares de ingeniería de software requeridos.
 
 ---
 

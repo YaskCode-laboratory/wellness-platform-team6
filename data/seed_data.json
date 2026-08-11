@@ -1,0 +1,40 @@
+{
+  "gym_branches": [
+    {
+      "id": "branch_central",
+      "name": "Wellness Fitness Center — Sucursal Central",
+      "city": "Ciudad Central",
+      "address": "Av. Principal #100"
+    },
+    {
+      "id": "branch_norte",
+      "name": "Wellness Fitness Center — Sucursal Norte",
+      "city": "Distrito Norte",
+      "address": "Plaza Comercial Norte #45"
+    }
+  ],
+  "coaches": [
+    {
+      "user_id": "coach_carlos",
+      "email": "coach.carlos@wellnessgym.com",
+      "name": "Carlos Mendoza",
+      "specialty": "Levantamiento de Pesas e Hipertrofia",
+      "gym_branch_id": "branch_central"
+    },
+    {
+      "user_id": "coach_maria",
+      "email": "coach.maria@wellnessgym.com",
+      "name": "María Fernández",
+      "specialty": "Biomecánica y Rehabilitación Física",
+      "gym_branch_id": "branch_norte"
+    }
+  ],
+  "admins": [
+    {
+      "user_id": "admin_main",
+      "email": "admin@wellnessgym.com",
+      "name": "Administrador Principal",
+      "gym_branch_id": "branch_central"
+    }
+  ]
+}

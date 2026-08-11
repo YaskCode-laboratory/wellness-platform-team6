@@ -1,35 +1,32 @@
-# Node.js
-**/node_modules/
-**/dist/
-**/build/
-.eslintcache
+# Entornos virtuales de Python
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.pyc
 
-# Python
-**/__pycache__/
-**/*.pyc
-**/*.pyo
-**/*.pyd
-**/.pytest_cache/
-**/env/
-**/venv/
-**/.venv/
+# Dependencias de Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Environment Variables
-**/.env
-**/.env.local
-**/.env.development.local
-**/.env.test.local
-**/.env.production.local
+# Artefactos de compilación y empaquetado (Build outputs)
+dist/
+dist.zip
+frontend_dist.zip
+*.zip
+build/
 
-# IDEs & System
-.vscode/
-.idea/
+# Archivos de credenciales y entorno local
+.env
+*.pem
+*.key
+service-account-key.json
+
+# Archivos del sistema operativo e IDEs
 .DS_Store
 Thumbs.db
-
-# GCP Service Accounts
-**/service-account-key.json
-**/*.json
-!**/package.json
-!**/tsconfig.json
-!**/*.config.json
+.vscode/
+.idea/
