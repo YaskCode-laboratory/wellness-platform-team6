@@ -1,0 +1,28 @@
+{
+  "system": "Wellness Lift RAG Engine",
+  "version": "1.0.0",
+  "domain": "Intelligent Weightlifting & Physical Rehabilitation Knowledge Base",
+  "documents": [
+    {
+      "id": "KB-001",
+      "file": "biomechanics_and_safety.md",
+      "category": "Biomechanics & Joint Safety",
+      "sources": ["NSCA Standards", "ISB Biomechanics Guidelines"],
+      "priority": "HIGH"
+    },
+    {
+      "id": "KB-002",
+      "file": "hypertrophy_periodization.md",
+      "category": "Hypertrophy & Progressive Overload",
+      "sources": ["Journal of Strength and Conditioning Research", "ACSM Guidelines"],
+      "priority": "HIGH"
+    },
+    {
+      "id": "KB-003",
+      "file": "medical_adaptations.md",
+      "category": "Medical Adaptations & Contraindications",
+      "sources": ["Clinical Sports Medicine Protocols", "Physical Therapy Rehabilitation Guidelines"],
+      "priority": "CRITICAL"
+    }
+  ]
+}
