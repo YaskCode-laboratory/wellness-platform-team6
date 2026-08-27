@@ -1,7 +1,7 @@
-# 📐 Estrategia e Implementación de Chunking para el Sistema RAG — Wellness Lift
+# 📐 Estrategia e Implementación de Chunking para el Sistema RAG — Wellness Lift (Issue #6)
 
 ## 1. Resumen Ejecutivo
-Este documento describe el diseño, la justificación de parámetros y la implementación de la estrategia de segmentación (**Chunking Strategy**) utilizada para procesar la base de conocimiento especializada del dominio deportivo y biomecánico en **Wellness Lift**.
+Este documento describe el diseño, la justificación de parámetros y la implementación de la estrategia de segmentación (**Chunking Strategy**) utilizada para procesar la base de conocimiento especializada del dominio deportivo y biomecánico en **Wellness Lift**, respondiendo al requerimiento **[S1-02 - Implementar estrategia de chunking] (Issue #6)**.
 
 ---
 
