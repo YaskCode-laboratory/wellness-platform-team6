@@ -1,12 +1,12 @@
 """
 Módulo de Razonamiento y Construcción de Prompts (ReasoningEngine).
-Orquesta la integración con RAG, la memoria de datos extraídos y construye mensajes del sistema.
+Orquesta la integración con RAG, la memoria de datos extraídos, la detección de intenciones e invocación de herramientas (Tool Calling).
 """
 
 import json
 import logging
 import random
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 
 from app import database
 from app.wellness_agent.catalog import EXERCISE_CATALOG, SPLIT_TEMPLATES, get_set_rep_scheme
@@ -17,11 +17,55 @@ logger = logging.getLogger(__name__)
 
 class ReasoningEngine:
     """
-    Motor de Razonamiento RAG-Augmented para la generación de rutinas y respuesta a consultas.
+    Motor de Razonamiento RAG-Augmented y Orquestador de Tool Calling.
     """
 
     def __init__(self, tool_registry: Optional[AgentToolRegistry] = None):
         self.tools = tool_registry or AgentToolRegistry()
+
+    def detect_and_execute_tools(self, user_id: str, message: str) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
+        """
+        Analiza si el mensaje del usuario requiere la invocación de herramientas.
+        Retorna (nombre_herramienta, resultado_herramienta) o (None, None) si no se requieren herramientas.
+        """
+        msg_lower = message.lower().strip()
+
+        # 1. Detección de Alternativas de Ejercicio
+        if any(k in msg_lower for k in ["alternativa", "reemplaz", "cambiar", "ocupad", "sustitui"]):
+            target_group = None
+            group_keywords = {
+                "Pecho": ["pecho", "banca", "press plano"],
+                "Espalda": ["espalda", "jalón", "polea alta", "dorsal", "remo"],
+                "Piernas": ["pierna", "sentadilla", "squat", "prensa"],
+                "Hombros": ["hombro", "deltoides", "press militar"],
+                "Bíceps": ["bícep", "bicep", "curl"],
+                "Tríceps": ["trícep", "tricep", "extensión"],
+            }
+            for group, keywords in group_keywords.items():
+                if any(kw in msg_lower for kw in keywords):
+                    target_group = group
+                    break
+            target_group = target_group or "Pecho"
+            result = self.tools.execute_tool("get_exercise_alternative", muscle_group=target_group)
+            return "get_exercise_alternative", result
+
+        # 2. Detección de Nutrición / Macros
+        if any(k in msg_lower for k in ["macro", "calor", "nutri", "proteín", "protein", "tdee", "dieta"]):
+            result = self.tools.execute_tool("calculate_nutrition_macros", user_id=user_id)
+            return "calculate_nutrition_macros", result
+
+        # 3. Detección de Evaluación de Riesgo de Lesión / Dolor
+        if any(k in msg_lower for k in ["duele", "dolor", "lesion", "lesión", "molest", "riesgo"]):
+            exercise_eval = "Sentadilla con Barra" if "sentadilla" in msg_lower else "Ejercicio General"
+            result = self.tools.execute_tool("assess_injury_risk", user_id=user_id, exercise_name=exercise_eval)
+            return "assess_injury_risk", result
+
+        # 4. Detección de Consulta Científica / RAG
+        if any(k in msg_lower for k in ["ciencia", "estudio", "evidencia", "mecanismo", "fisioterapia", "periodización"]):
+            result = self.tools.execute_tool("retrieve_rag_knowledge", query_text=message, top_k=2)
+            return "retrieve_rag_knowledge", result
+
+        return None, None
 
     def build_routine_prompt(self, user_id: str, extracted_facts: Optional[List[str]] = None) -> str:
         """Construye el prompt estructurado para la generación de rutinas enriquecido con hechos conversacionales."""
@@ -157,89 +201,50 @@ class ReasoningEngine:
 
         return {"focus": focus, "weekly_schedule": schedule}
 
-    def generate_local_chat_response(self, user_id: str, message: str, extracted_facts: Optional[List[str]] = None) -> str:
-        """Responde la consulta del usuario analizando perfil, reglas, intenciones y memoria de hechos."""
+    def generate_local_chat_response(
+        self, user_id: str, message: str, extracted_facts: Optional[List[str]] = None
+    ) -> str:
+        """Responde la consulta del usuario invocando herramientas registradas o respondiendo de forma determinista."""
         msg = message.lower().strip()
         profile = database.get_user_profile(user_id)
-        fitness = profile.get("fitness_profile", {})
         personal = profile.get("personal_info", {})
-        metrics = profile.get("physical_metrics", {})
-        nutrition = profile.get("nutrition_profile", {})
 
         name = personal.get("name", "Atleta")
-        weight = metrics.get("weight", 70)
-        level = fitness.get("level", "basico")
-        goal = fitness.get("goal", "hipertrofia")
-        days = fitness.get("training_days", [])
-        sessions = database.get_workout_sessions(user_id)
 
-        # 1. Alternativas de Ejercicio
-        if any(k in msg for k in ["alternativa", "reemplaz", "cambiar", "ocupad", "sustitui"]):
-            for group in EXERCISE_CATALOG.keys():
-                if group.lower() in msg or (group == "Pecho" and "banca" in msg) or (group == "Piernas" and "sentadilla" in msg):
-                    alt_data = self.tools.get_exercise_alternative(group)
-                    if alt_data.get("status") == "success":
-                        return (
-                            f"Sugerencia Local: Ya que la máquina puede estar ocupada, te sugiero cambiar por {alt_data['name']}. "
-                            f"Trabaja el patrón muscular de {group}."
-                        )
-            return "Sugerencia Local: No logré identificar el ejercicio. Intenta con una variante con mancuernas."
+        # 1. Detección e Invocación de Herramientas
+        tool_name, tool_result = self.detect_and_execute_tools(user_id, message)
 
-        # 2. Progresión de Carga
-        if any(k in msg for k in ["peso", "progresar", "subir", "carga", "progresión"]):
-            if sessions:
-                last = sessions[0]
-                return f"En tu última sesión levantaste un volumen total de {last.get('total_volume', 0)} kg. Intenta aumentarle 1.25kg o 2.5kg a tu primer ejercicio."
-            base_weight = round(weight * 0.4) if goal == "hipertrofia" else round(weight * 0.5)
-            return (
-                f"{name}, recomendaciones iniciales de carga:\n"
-                f"- Multiarticulares (sentadilla, press de banca): comenza con {base_weight} kg\n"
-                f"- Aislamiento (curl, extensiones): comenza con {round(base_weight * 0.4)} kg\n"
-                f"Sube 2.5 kg en multiarticulares y 1.25 kg en aislamiento semanalmente."
-            )
-
-        # 3. Dolor o Lesión
-        if any(k in msg for k in ["duele", "dolor", "lesion", "lesión", "molest"]):
-            return (
-                "Advertencia de Seguridad:\n"
-                f"{name}, nunca entrenes sobre dolor agudo o articular.\n"
-                "1. Detén el ejercicio\n"
-                "2. Aplica hielo 15 min\n"
-                "3. Consulta a un fisioterapeuta si persiste 48 horas."
-            )
-
-        # 4. Nutrición
-        if any(k in msg for k in ["macro", "calor", "nutri", "proteín", "protein", "dieta", "comer"]):
-            macros_data = self.tools.calculate_nutrition_macros(user_id)
-            if macros_data["tdee"]:
+        if tool_name and tool_result:
+            if tool_name == "get_exercise_alternative" and tool_result.get("status") == "success":
                 return (
-                    f"Plan Nutricional para {name}:\n"
-                    f"TDEE estimado: {macros_data['tdee']} kcal/día\n"
-                    f"- Proteínas: {macros_data['protein']}g\n"
-                    f"- Carbohidratos: {macros_data['carbs']}g\n"
-                    f"- Grasas: {macros_data['fats']}g"
+                    f"Sugerencia de Herramienta [{tool_name}]: Ya que la máquina de {tool_result['muscle_group']} puede estar ocupada, "
+                    f"te sugiero cambiar por {tool_result['name']}."
                 )
-            return "Para calcular tus macronutrientes, completa tu perfil en la sección de Perfil."
+            elif tool_name == "calculate_nutrition_macros" and tool_result.get("status") == "success":
+                return (
+                    f"Plan Nutricional Calculado por Herramienta [{tool_name}] para {name}:\n"
+                    f"- TDEE Estimado: {tool_result['tdee']} kcal/día\n"
+                    f"- Proteínas: {tool_result['protein']}g\n"
+                    f"- Carbohidratos: {tool_result['carbs']}g\n"
+                    f"- Grasas: {tool_result['fats']}g"
+                )
+            elif tool_name == "assess_injury_risk" and tool_result.get("status") == "success":
+                return (
+                    f"Evaluación de Riesgo [{tool_name}]: Nivel {tool_result['risk_level']}.\n"
+                    f"- Advertencia: {tool_result['warning']}\n"
+                    f"- Recomendación Segura: {tool_result['safe_recommendation']}"
+                )
+            elif tool_name == "retrieve_rag_knowledge" and isinstance(tool_result, list):
+                snippets = "\n\n".join([c.get("text", "") for c in tool_result]) if tool_result else "Sin evidencia recuperada."
+                return f"Consulta de Base de Conocimiento RAG [{tool_name}]:\n\n{snippets}"
 
-        # 5. Información sobre Rutina
-        if any(k in msg for k in ["rutina", "plan", "programa", "día", "dias", "semana"]):
-            days_str = ", ".join(days) if days else "no configurados"
-            sets, reps = get_set_rep_scheme(level, goal)
-            return (
-                f"Tu Plan de Entrenamiento Actual, {name}:\n"
-                f"- Objetivo: {goal}\n"
-                f"- Nivel: {level}\n"
-                f"- Días: {days_str} ({len(days)} días/semana)\n"
-                f"- Esquema: {sets} series x {reps} repeticiones"
-            )
-
-        # 6. Saludo / Contexto Recordado
+        # 2. Respuestas Generales (Sin Herramientas)
         facts_summary = ""
         if extracted_facts:
-            facts_summary = f"\n\nTengo registradas estas observaciones de conversaciones anteriores:\n- " + "\n- ".join(extracted_facts)
+            facts_summary = f"\n\nObservaciones registradas de conversaciones anteriores:\n- " + "\n- ".join(extracted_facts)
 
         return (
-            f"Hola {name}, soy tu Wellness Coach inteligente.\n"
-            f"Puedo ayudarte con alternativas de ejercicios, progresión de cargas, nutrición y alertas de seguridad.{facts_summary}\n\n"
+            f"Hola {name}, soy tu Wellness Coach inteligente 2.0.\n"
+            f"Puedo ayudarte con alternativas de ejercicios, progresión de cargas, nutrición, alertas de seguridad y consulta RAG.{facts_summary}\n\n"
             f"¿En qué te puedo ayudar hoy?"
         )

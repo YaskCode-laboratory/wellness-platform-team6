@@ -40,24 +40,13 @@ def test_retrieve_top_k(evaluator):
 
 def test_single_query_evaluation(evaluator):
     """Verifica la evaluación de un caso individual de prueba."""
-    query_item = {
-        "query_id": "TEST_01",
-        "category": "Medical Substitutions",
-        "query": "Hernia discal L4-L5 lumbar contraindicaciones",
-        "expected_relevant_chunk_ids": [
-            "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0"
-        ],
-        "contraindicated_exercises": [
-            "Sentadilla Libre con Barra"
-        ],
-        "safe_substitutes": [
-            "Prensa Inclinada a 45°"
-        ]
-    }
+    test_queries_file = ROOT_DIR / "data" / "evaluation" / "test_queries.json"
+    with open(test_queries_file, "r", encoding="utf-8") as f:
+        test_queries = json.load(f)
 
-    res = evaluator.evaluate_query(query_item, top_k=3)
+    res = evaluator.evaluate_query(test_queries[0], top_k=3)
 
-    assert res["query_id"] == "TEST_01"
+    assert res["query_id"] == "Q01"
     assert res["recall_at_k"] == 1.0
     assert res["safety_passed"] is True
     assert res["mrr"] > 0.0
