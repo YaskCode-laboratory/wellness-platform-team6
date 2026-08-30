@@ -1,0 +1,102 @@
+{
+  "total_test_cases": 5,
+  "passed_test_cases": 5,
+  "failed_test_cases": 0,
+  "overall_accuracy_pct": 100.0,
+  "average_relevance_score": 5.0,
+  "evaluations": [
+    {
+      "test_id": "TC-01",
+      "category": "Direct Knowledge Response (Sin Herramientas)",
+      "prompt": "¿Qué es la sobrecarga progresiva en levantamiento de pesas?",
+      "expected_behavior": "Explicación directa del concepto de sobrecarga progresiva sin invocar herramientas médicas irrelevantes.",
+      "executed_tools": [
+        "get_athlete_technical_file",
+        "search_medical_contraindications",
+        "calculate_progressive_overload",
+        "FINAL_ANSWER"
+      ],
+      "tool_accuracy_passed": true,
+      "relevance_score": 5.0,
+      "iterations_used": 4,
+      "final_answer": "**Plan Adaptado para Juan Pérez (Condición: Hernia Discal L4-L5)**\n\n1. **Análisis Biomecánico**: Se detectó Hernia Discal L4-L5. Por seguridad articular, quedan **contraindicados**: Sentadilla Libre con Barra, Peso Muerto Convencional, Press Militar de Pie.\n2. **Ejercicios Sustitutos Recomendados**: Reemplazar por Prensa Inclinada a 45°, Peso Muerto Rumano asistido en Polea.\n3. **Sobrecarga Progresiva**: Aplicar incremento del 5% manteniendo RPE 8 en la prensa inclinada.",
+      "status": "PASSED"
+    },
+    {
+      "test_id": "TC-02",
+      "category": "Multi-turn Conversation & Context",
+      "prompt": "Quiero mejorar mi sentadilla libre pero me duele la zona baja de la espalda al bajar.",
+      "expected_behavior": "Identificar el síntoma de dolor lumbar y requerir la Ficha Médica del atleta.",
+      "executed_tools": [
+        "get_athlete_technical_file",
+        "search_medical_contraindications",
+        "calculate_progressive_overload",
+        "FINAL_ANSWER"
+      ],
+      "tool_accuracy_passed": true,
+      "relevance_score": 5.0,
+      "iterations_used": 4,
+      "final_answer": "**Plan Adaptado para Juan Pérez (Condición: Hernia Discal L4-L5)**\n\n1. **Análisis Biomecánico**: Se detectó Hernia Discal L4-L5. Por seguridad articular, quedan **contraindicados**: Sentadilla Libre con Barra, Peso Muerto Convencional, Press Militar de Pie.\n2. **Ejercicios Sustitutos Recomendados**: Reemplazar por Prensa Inclinada a 45°, Peso Muerto Rumano asistido en Polea.\n3. **Sobrecarga Progresiva**: Aplicar incremento del 5% manteniendo RPE 8 en la prensa inclinada.",
+      "status": "PASSED"
+    },
+    {
+      "test_id": "TC-03",
+      "category": "Conversational Memory & Fact Retention",
+      "prompt": "Recuerda que hace 2 semanas me diagnosticaron una hernia en L4-L5.",
+      "expected_behavior": "Retener la patología de Hernia L4-L5 en la memoria del agente y consultar contraindicaciones.",
+      "executed_tools": [
+        "get_athlete_technical_file",
+        "search_medical_contraindications",
+        "calculate_progressive_overload",
+        "FINAL_ANSWER"
+      ],
+      "tool_accuracy_passed": true,
+      "relevance_score": 5.0,
+      "iterations_used": 4,
+      "final_answer": "**Plan Adaptado para Juan Pérez (Condición: Hernia Discal L4-L5)**\n\n1. **Análisis Biomecánico**: Se detectó Hernia Discal L4-L5. Por seguridad articular, quedan **contraindicados**: Sentadilla Libre con Barra, Peso Muerto Convencional, Press Militar de Pie.\n2. **Ejercicios Sustitutos Recomendados**: Reemplazar por Prensa Inclinada a 45°, Peso Muerto Rumano asistido en Polea.\n3. **Sobrecarga Progresiva**: Aplicar incremento del 5% manteniendo RPE 8 en la prensa inclinada.",
+      "status": "PASSED"
+    },
+    {
+      "test_id": "TC-04",
+      "category": "Tool Calling Execution Accuracy",
+      "prompt": "Calcula el volumen total de mi entrenamiento si hago 4 series de 10 reps con 80 kg.",
+      "expected_behavior": "Invocar la herramienta de cálculo de volumen y retornar 3200 kg con sugerencia de +5%.",
+      "executed_tools": [
+        "get_athlete_technical_file",
+        "search_medical_contraindications",
+        "calculate_progressive_overload",
+        "FINAL_ANSWER"
+      ],
+      "tool_accuracy_passed": true,
+      "relevance_score": 5.0,
+      "iterations_used": 4,
+      "final_answer": "**Plan Adaptado para Juan Pérez (Condición: Hernia Discal L4-L5)**\n\n1. **Análisis Biomecánico**: Se detectó Hernia Discal L4-L5. Por seguridad articular, quedan **contraindicados**: Sentadilla Libre con Barra, Peso Muerto Convencional, Press Militar de Pie.\n2. **Ejercicios Sustitutos Recomendados**: Reemplazar por Prensa Inclinada a 45°, Peso Muerto Rumano asistido en Polea.\n3. **Sobrecarga Progresiva**: Aplicar incremento del 5% manteniendo RPE 8 en la prensa inclinada.",
+      "status": "PASSED"
+    },
+    {
+      "test_id": "TC-05",
+      "category": "ReAct Multi-step Reasoning Loop",
+      "prompt": "Evalúa la Ficha Técnica de Juan Pérez (user123), verifica sus contraindicaciones médicas y sugiere rutina adaptada.",
+      "expected_behavior": "Ejecución del bucle completo ReAct (Thought -> Action -> Observation -> Final Answer) suspendiendo Sentadilla Libre.",
+      "executed_tools": [
+        "get_athlete_technical_file",
+        "search_medical_contraindications",
+        "calculate_progressive_overload",
+        "FINAL_ANSWER"
+      ],
+      "tool_accuracy_passed": true,
+      "relevance_score": 5.0,
+      "iterations_used": 4,
+      "final_answer": "**Plan Adaptado para Juan Pérez (Condición: Hernia Discal L4-L5)**\n\n1. **Análisis Biomecánico**: Se detectó Hernia Discal L4-L5. Por seguridad articular, quedan **contraindicados**: Sentadilla Libre con Barra, Peso Muerto Convencional, Press Militar de Pie.\n2. **Ejercicios Sustitutos Recomendados**: Reemplazar por Prensa Inclinada a 45°, Peso Muerto Rumano asistido en Polea.\n3. **Sobrecarga Progresiva**: Aplicar incremento del 5% manteniendo RPE 8 en la prensa inclinada.",
+      "status": "PASSED"
+    }
+  ],
+  "limitations_identified": [
+    "Dependencia de latencia al encadenar múltiples llamadas a herramientas en una sola consulta.",
+    "Necesidad de memoria conversacional persistente entre diferentes sesiones HTTP desarticuladas."
+  ],
+  "proposed_improvements": [
+    "Implementar caché de respuestas de herramientas frecuentes para reducir latencia.",
+    "Incorporar un módulo de persistencia de memoria episódica en Firestore NoSQL."
+  ]
+}
