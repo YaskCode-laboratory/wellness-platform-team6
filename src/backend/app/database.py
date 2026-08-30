@@ -2,7 +2,10 @@ import os
 import logging
 import hashlib
 from dotenv import load_dotenv
-from google.cloud import firestore
+try:
+    from google.cloud import firestore
+except ImportError:
+    firestore = None
 
 # Cargar variables de entorno del archivo .env
 load_dotenv()
@@ -17,7 +20,7 @@ use_mock = True
 
 # Si existe la variable de entorno para GCP o Firestore, intentamos conectar
 # Para demos rápidos, se puede configurar GOOGLE_APPLICATION_CREDENTIALS
-if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or os.environ.get("FIRESTORE_EMULATOR_HOST") or os.environ.get("GOOGLE_CLOUD_PROJECT"):
+if firestore and (os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or os.environ.get("FIRESTORE_EMULATOR_HOST") or os.environ.get("GOOGLE_CLOUD_PROJECT")):
     try:
         # Inicializa el cliente. Si no hay project_id explícito, Google Cloud SDK lo detecta del entorno
         db = firestore.Client()

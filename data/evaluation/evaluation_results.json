@@ -1,0 +1,362 @@
+{
+  "summary": {
+    "total_queries": 10,
+    "top_k_evaluated": 3,
+    "mean_precision_at_k": 0.2666,
+    "mean_recall_at_k": 0.8,
+    "mean_mrr": 0.5667,
+    "medical_safety_accuracy": 1.0
+  },
+  "detailed_results": [
+    {
+      "query_id": "Q01",
+      "category": "Medical Substitutions",
+      "query": "¿Qué ejercicios están contraindicados si el atleta tiene hernia discal L4-L5 lumbar y cuáles son sus sustitutos seguros?",
+      "top_k": 3,
+      "precision_at_k": 0.3333,
+      "recall_at_k": 1.0,
+      "mrr": 1.0,
+      "retrieved_chunk_ids": [
+        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+        "medical_adaptations.md#1._dominio_y_alcance-0"
+      ],
+      "top_score": 0.25045,
+      "safety_passed": true,
+      "unwarned_contraindications": [],
+      "missing_substitutes": [],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+          "similarity_score": 0.25045,
+          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
+        },
+        {
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.229692,
+          "heading_context": "2. Mecanismos de Hipertrofia"
+        },
+        {
+          "chunk_id": "medical_adaptations.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.225371,
+          "heading_context": "1. Dominio y Alcance"
+        }
+      ]
+    },
+    {
+      "query_id": "Q02",
+      "category": "Medical Substitutions",
+      "query": "¿Cómo adaptar el entrenamiento para un cliente con lesión de rodilla en meniscos o ligamentos?",
+      "top_k": 3,
+      "precision_at_k": 0.3333,
+      "recall_at_k": 1.0,
+      "mrr": 1.0,
+      "retrieved_chunk_ids": [
+        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+        "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0"
+      ],
+      "top_score": 0.177262,
+      "safety_passed": true,
+      "unwarned_contraindications": [],
+      "missing_substitutes": [],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+          "similarity_score": 0.177262,
+          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
+        },
+        {
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.158622,
+          "heading_context": "2. Mecanismos de Hipertrofia"
+        },
+        {
+          "chunk_id": "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
+          "similarity_score": 0.143649,
+          "heading_context": "2. Principios Biomecánicos Fundamentales"
+        }
+      ]
+    },
+    {
+      "query_id": "Q03",
+      "category": "Medical Substitutions",
+      "query": "¿Qué restricciones de intensidad y maniobras deben aplicarse en atletas con hipertensión arterial?",
+      "top_k": 3,
+      "precision_at_k": 0.3333,
+      "recall_at_k": 1.0,
+      "mrr": 1.0,
+      "retrieved_chunk_ids": [
+        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+        "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0"
+      ],
+      "top_score": 0.1184,
+      "safety_passed": true,
+      "unwarned_contraindications": [],
+      "missing_substitutes": [],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+          "similarity_score": 0.1184,
+          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
+        },
+        {
+          "chunk_id": "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
+          "similarity_score": 0.115186,
+          "heading_context": "2. Principios Biomecánicos Fundamentales"
+        },
+        {
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.112528,
+          "heading_context": "2. Mecanismos de Hipertrofia"
+        }
+      ]
+    },
+    {
+      "query_id": "Q04",
+      "category": "Medical Substitutions",
+      "query": "¿Qué ejercicios se deben evitar ante una lesión de manguito rotador en el hombro?",
+      "top_k": 3,
+      "precision_at_k": 0.3333,
+      "recall_at_k": 1.0,
+      "mrr": 0.3333,
+      "retrieved_chunk_ids": [
+        "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
+        "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0"
+      ],
+      "top_score": 0.171522,
+      "safety_passed": true,
+      "unwarned_contraindications": [],
+      "missing_substitutes": [],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
+          "similarity_score": 0.171522,
+          "heading_context": "2. Principios Biomecánicos Fundamentales"
+        },
+        {
+          "chunk_id": "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.139989,
+          "heading_context": "1. Dominio y Alcance"
+        },
+        {
+          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+          "similarity_score": 0.134457,
+          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
+        }
+      ]
+    },
+    {
+      "query_id": "Q05",
+      "category": "Biomechanics & Safety",
+      "query": "¿Cuáles son los principios biomecánicos fundamentales para mantener la alineación articular en sentadillas?",
+      "top_k": 3,
+      "precision_at_k": 0.3333,
+      "recall_at_k": 1.0,
+      "mrr": 0.5,
+      "retrieved_chunk_ids": [
+        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+        "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
+        "hypertrophy_periodization.md#1._dominio_y_alcance-0"
+      ],
+      "top_score": 0.142594,
+      "safety_passed": true,
+      "unwarned_contraindications": [],
+      "missing_substitutes": [],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+          "similarity_score": 0.142594,
+          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
+        },
+        {
+          "chunk_id": "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
+          "similarity_score": 0.129303,
+          "heading_context": "2. Principios Biomecánicos Fundamentales"
+        },
+        {
+          "chunk_id": "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.111865,
+          "heading_context": "1. Dominio y Alcance"
+        }
+      ]
+    },
+    {
+      "query_id": "Q06",
+      "category": "Biomechanics & Safety",
+      "query": "¿Qué organizaciones o fuentes científicas respaldan los criterios de selección biomecánica?",
+      "top_k": 3,
+      "precision_at_k": 0.3333,
+      "recall_at_k": 1.0,
+      "mrr": 0.3333,
+      "retrieved_chunk_ids": [
+        "medical_adaptations.md#1._dominio_y_alcance-0",
+        "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+        "biomechanics_and_safety.md#3._criterios_de_selección_de_información-0"
+      ],
+      "top_score": 0.146519,
+      "safety_passed": true,
+      "unwarned_contraindications": [],
+      "missing_substitutes": [],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "medical_adaptations.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.146519,
+          "heading_context": "1. Dominio y Alcance"
+        },
+        {
+          "chunk_id": "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.135911,
+          "heading_context": "1. Dominio y Alcance"
+        },
+        {
+          "chunk_id": "biomechanics_and_safety.md#3._criterios_de_selección_de_información-0",
+          "similarity_score": 0.094522,
+          "heading_context": "3. Criterios de Selección de Información"
+        }
+      ]
+    },
+    {
+      "query_id": "Q07",
+      "category": "Hypertrophy & Periodization",
+      "query": "¿Cuáles son los mecanismos principales para la estimulación de hipertrofia muscular?",
+      "top_k": 3,
+      "precision_at_k": 0.3333,
+      "recall_at_k": 1.0,
+      "mrr": 1.0,
+      "retrieved_chunk_ids": [
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+        "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
+        "hypertrophy_periodization.md#1._dominio_y_alcance-0"
+      ],
+      "top_score": 0.164978,
+      "safety_passed": true,
+      "unwarned_contraindications": [],
+      "missing_substitutes": [],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.164978,
+          "heading_context": "2. Mecanismos de Hipertrofia"
+        },
+        {
+          "chunk_id": "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
+          "similarity_score": 0.163212,
+          "heading_context": "2. Principios Biomecánicos Fundamentales"
+        },
+        {
+          "chunk_id": "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.143738,
+          "heading_context": "1. Dominio y Alcance"
+        }
+      ]
+    },
+    {
+      "query_id": "Q08",
+      "category": "Hypertrophy & Periodization",
+      "query": "¿Cómo se estructuran los rangos de repeticiones y descanso en la fase de fuerza máxima frente a hipertrofia?",
+      "top_k": 3,
+      "precision_at_k": 0.0,
+      "recall_at_k": 0.0,
+      "mrr": 0.0,
+      "retrieved_chunk_ids": [
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+        "medical_adaptations.md#1._dominio_y_alcance-0"
+      ],
+      "top_score": 0.168542,
+      "safety_passed": true,
+      "unwarned_contraindications": [],
+      "missing_substitutes": [],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.168542,
+          "heading_context": "2. Mecanismos de Hipertrofia"
+        },
+        {
+          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+          "similarity_score": 0.166883,
+          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
+        },
+        {
+          "chunk_id": "medical_adaptations.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.151093,
+          "heading_context": "1. Dominio y Alcance"
+        }
+      ]
+    },
+    {
+      "query_id": "Q09",
+      "category": "Domain Scope",
+      "query": "¿Cuál es el alcance del documento de adaptaciones médicas en el motor RAG?",
+      "top_k": 3,
+      "precision_at_k": 0.3333,
+      "recall_at_k": 1.0,
+      "mrr": 0.5,
+      "retrieved_chunk_ids": [
+        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+        "medical_adaptations.md#1._dominio_y_alcance-0",
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0"
+      ],
+      "top_score": 0.187955,
+      "safety_passed": true,
+      "unwarned_contraindications": [],
+      "missing_substitutes": [],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+          "similarity_score": 0.187955,
+          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
+        },
+        {
+          "chunk_id": "medical_adaptations.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.164441,
+          "heading_context": "1. Dominio y Alcance"
+        },
+        {
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.163677,
+          "heading_context": "2. Mecanismos de Hipertrofia"
+        }
+      ]
+    },
+    {
+      "query_id": "Q10",
+      "category": "Domain Scope",
+      "query": "¿Cuál es el dominio y alcance de las guías de periodización e hipertrofia?",
+      "top_k": 3,
+      "precision_at_k": 0.0,
+      "recall_at_k": 0.0,
+      "mrr": 0.0,
+      "retrieved_chunk_ids": [
+        "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0"
+      ],
+      "top_score": 0.163365,
+      "safety_passed": true,
+      "unwarned_contraindications": [],
+      "missing_substitutes": [],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
+          "similarity_score": 0.163365,
+          "heading_context": "2. Principios Biomecánicos Fundamentales"
+        },
+        {
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.12862,
+          "heading_context": "2. Mecanismos de Hipertrofia"
+        },
+        {
+          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+          "similarity_score": 0.124313,
+          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
+        }
+      ]
+    }
+  ]
+}
