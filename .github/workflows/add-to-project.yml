@@ -12,10 +12,11 @@ jobs:
 
     steps:
       - name: Add item to SI-2026-I
+        continue-on-error: true
         env:
-          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
           ITEM_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
         run: |
           gh project item-add 1 \
-            --owner computing-laboratory \
-            --url "$ITEM_URL"
+            --owner "${{ github.repository_owner }}" \
+            --url "$ITEM_URL" || true
