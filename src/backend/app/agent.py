@@ -17,8 +17,16 @@ import os
 import time
 from app import database
 
-import groq
-import httpx
+try:
+    import groq
+except ImportError:
+    groq = None
+
+try:
+    import httpx
+except ImportError:
+    httpx = None
+
 try:
     import google.generativeai as genai
 except ImportError:
@@ -32,6 +40,8 @@ def get_openrouter_key():
     return os.environ.get("OPENROUTER_API_KEY", OPENROUTER_DEFAULT_KEY)
 
 def _call_openrouter_ai(prompt: str, is_json: bool = False) -> str:
+    if not httpx:
+        return None
     key = get_openrouter_key()
     if not key:
         return None
@@ -68,6 +78,8 @@ def _call_openrouter_ai(prompt: str, is_json: bool = False) -> str:
     return None
 
 def get_groq_client():
+    if not groq:
+        return None
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
         return None
