@@ -1,3 +1,7 @@
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'backend')))
 from app import database
 
 def test_admin_and_techfile():
@@ -36,7 +40,7 @@ def test_admin_and_techfile():
         print(f"  - [{date}] {day}: {', '.join(exs)}")
     assert len(tech_file["workout_history"]) >= 3
 
-    print("\n✅ TODAS LAS PRUEBAS BACKEND DE ADMIN Y FICHA TÉCNICA PASARON EXITOSAMENTE.")
+    print("\n[OK] TODAS LAS PRUEBAS BACKEND DE ADMIN Y FICHA TÉCNICA PASARON EXITOSAMENTE.")
 
 if __name__ == "__main__":
     test_admin_and_techfile()
