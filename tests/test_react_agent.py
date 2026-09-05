@@ -1,13 +1,22 @@
 """
-Pruebas Automatizadas del Patrón ReAct — Wellness Coach Agent 2.0 (Issue #16)
+Pruebas Automatizadas del Patrón ReAct — Wellness Coach Agent 2.0 (Issue #16 & Issue #18)
 """
 
 import unittest
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'backend')))
-from app.react_agent import ReActAgent
+backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'backend'))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+try:
+    from app.react_agent import ReActAgent
+except ModuleNotFoundError:
+    try:
+        from react_agent import ReActAgent
+    except ModuleNotFoundError:
+        from .react_agent import ReActAgent
 
 class TestReActAgent(unittest.TestCase):
     def setUp(self):
@@ -25,7 +34,6 @@ class TestReActAgent(unittest.TestCase):
         self.assertIn("Lesión de Rodilla", result["final_answer"])
 
     def test_anti_loop_protection(self):
-        # Verificar que el bucle no supere el límite de iteraciones (max 5)
         result = self.agent.run_react_loop("Consulta repetitiva", athlete_id="user123", max_iterations=5)
         self.assertLessEqual(result["total_iterations"], 5)
 

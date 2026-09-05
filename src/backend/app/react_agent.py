@@ -1,5 +1,5 @@
 """
-Módulo Wellness Coach Agent 2.0 — Patrón ReAct y Flujo de Razonamiento (Issue #16)
+Módulo Wellness Coach Agent 2.0 — Patrón ReAct y Flujo de Razonamiento (Issue #16 & Issue #18)
 Implementa el ciclo de razonamiento Thought -> Action -> Observation -> Final Answer con prevención de bucles infinitos.
 """
 
@@ -15,10 +15,7 @@ if backend_dir not in sys.path:
 try:
     from app.rag_pipeline import RAGPipeline
 except ModuleNotFoundError:
-    try:
-        from rag_pipeline import RAGPipeline
-    except ModuleNotFoundError:
-        from .rag_pipeline import RAGPipeline
+    from rag_pipeline import RAGPipeline
 
 class ReActAgent:
     def __init__(self):
@@ -103,10 +100,6 @@ class ReActAgent:
 
     # --- CICLO DE RAZONAMIENTO REACT ---
     def run_react_loop(self, user_prompt: str, athlete_id: str = None, max_iterations: int = 5) -> Dict[str, Any]:
-        """
-        Ejecuta el bucle ReAct (Thought -> Action -> Observation -> Final Answer).
-        Incluye protección anti-bucles repetidos.
-        """
         steps = []
         executed_tool_calls = set()
         
@@ -114,7 +107,6 @@ class ReActAgent:
         final_answer = ""
         
         for iteration in range(1, max_iterations + 1):
-            # 1. PENSAMIENTO (THOUGHT)
             if iteration == 1:
                 current_thought = f"PENSAMIENTO [{iteration}]: El usuario solicita: '{user_prompt}'. Necesito consultar el expediente técnico del atleta para revisar condiciones de salud y rutina actual."
                 action_name = "get_athlete_technical_file"
@@ -139,7 +131,6 @@ class ReActAgent:
                 action_name = "FINAL_ANSWER"
                 action_input = None
 
-            # Detección Anti-Bucles
             tool_call_signature = f"{action_name}:{json.dumps(action_input)}"
             if tool_call_signature in executed_tool_calls and action_name != "FINAL_ANSWER":
                 current_thought += " (Detección de ciclo duplicado: forzando respuesta final)."
@@ -147,7 +138,6 @@ class ReActAgent:
 
             executed_tool_calls.add(tool_call_signature)
 
-            # 2. ACCIÓN Y OBSERVACIÓN
             if action_name == "FINAL_ANSWER":
                 final_answer = self._synthesize_final_answer(user_prompt, steps)
                 steps.append({
@@ -180,7 +170,6 @@ class ReActAgent:
         }
 
     def _synthesize_final_answer(self, prompt: str, steps: List[Dict[str, Any]]) -> str:
-        """Sintetiza la respuesta final basándose en las observaciones acumuladas."""
         athlete_info = {}
         contraindications = {}
         for s in steps:
@@ -203,9 +192,3 @@ class ReActAgent:
             )
         else:
             return f"Plan de entrenamiento optimizado para {name}: Rutina aprobada con sobrecarga progresiva estándar."
-
-
-if __name__ == "__main__":
-    agent = ReActAgent()
-    res = agent.run_react_loop("Ajusta mi rutina de pierna", athlete_id="user123")
-    print("Agente ReAct ejecutado. Total iteraciones:", res["total_iterations"])

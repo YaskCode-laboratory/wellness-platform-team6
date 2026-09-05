@@ -1,3 +1,7 @@
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'backend')))
 from app import database
 
 def test_suite():
@@ -51,7 +55,7 @@ def test_suite():
     auth_admin = database.verify_user_credentials("admin.secundario@wellness.com", "admin123")
     assert auth_admin is not None and auth_admin["role"] == "admin"
 
-    print("\n✅ TODAS LAS PRUEBAS FINALIZARON CON ÉXITO.")
+    print("\n[OK] TODAS LAS PRUEBAS FINALIZARON CON ÉXITO.")
 
 if __name__ == "__main__":
     test_suite()

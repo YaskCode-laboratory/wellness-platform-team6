@@ -1,5 +1,5 @@
 """
-Pipeline RAG End-to-End — Wellness Lift (Issue #9 & Issue #16)
+Pipeline RAG End-to-End — Wellness Lift (Issue #9 & Issue #18)
 Orquesta el flujo completo RAG: Consulta -> Búsqueda Vectorial por Similitud -> Aumento de Contexto (Context Augmentation) -> Generación LLM.
 """
 
@@ -8,11 +8,17 @@ import sys
 import json
 from typing import Dict, Any, List
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
 try:
     from app.vector_store import VectorDatabaseStore
 except ModuleNotFoundError:
-    from vector_store import VectorDatabaseStore
+    try:
+        from vector_store import VectorDatabaseStore
+    except ModuleNotFoundError:
+        from .vector_store import VectorDatabaseStore
 
 class RAGPipeline:
     def __init__(self, vector_index_path: str = None):
@@ -32,7 +38,6 @@ class RAGPipeline:
                 self.vector_store.fit_and_index(chunks)
 
     def retrieve_context(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
-        """Etapa 2 y 3: Búsqueda vectorial y recuperación de chunks relevantes."""
         results = self.vector_store.search_similarity(query, k=top_k)
         retrieved = []
         for doc, score in results:
@@ -46,7 +51,6 @@ class RAGPipeline:
         return retrieved
 
     def build_augmented_prompt(self, query: str, retrieved_chunks: List[Dict[str, Any]], user_profile: Dict[str, Any] = None) -> str:
-        """Etapa 4: Construcción del Prompt Aumentado con Contexto RAG y Perfil del Atleta."""
         context_blocks = []
         for i, chunk in enumerate(retrieved_chunks, 1):
             context_blocks.append(
@@ -73,7 +77,6 @@ class RAGPipeline:
         return augmented_prompt
 
     def run_pipeline(self, query: str, user_profile: Dict[str, Any] = None, top_k: int = 3) -> Dict[str, Any]:
-        """Etapa 1 a 5: Ejecución del Pipeline RAG end-to-end."""
         retrieved_chunks = self.retrieve_context(query, top_k=top_k)
         augmented_prompt = self.build_augmented_prompt(query, retrieved_chunks, user_profile)
         sources = list(set([c["source_file"] for c in retrieved_chunks]))
@@ -90,7 +93,6 @@ class RAGPipeline:
         }
 
     def _generate_simulated_llm_response(self, query: str, chunks: List[Dict[str, Any]], user_profile: Dict[str, Any] = None) -> str:
-        """Generador determinista RAG de demostración enriquecido por los chunks recuperados."""
         query_lower = query.lower()
         if "hernia" in query_lower or "lumbar" in query_lower or (user_profile and "lumbar" in str(user_profile).lower()):
             return (
