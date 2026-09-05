@@ -1,3 +1,7 @@
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'backend')))
 from app import database
 
 def test_reassign_and_branch_reg():
@@ -15,7 +19,7 @@ def test_reassign_and_branch_reg():
     print(f"Sucursales disponibles ({len(branches)}): {[b['name'] for b in branches]}")
     assert len(branches) >= 2
 
-    print("\n✅ TODAS LAS PRUEBAS DE REASIGNACIÓN Y SUCURSALES PASARON EXCELENTE.")
+    print("\n[OK] TODAS LAS PRUEBAS DE REASIGNACIÓN Y SUCURSALES PASARON EXCELENTE.")
 
 if __name__ == "__main__":
     test_reassign_and_branch_reg()
