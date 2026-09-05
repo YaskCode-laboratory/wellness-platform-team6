@@ -1,3 +1,7 @@
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'backend')))
 from app import database, agent
 
 def test_multirole_system():
@@ -52,7 +56,7 @@ def test_multirole_system():
     print(f"Atletas de Coach Carlos: {len(carlos_athletes)} | Atletas de Coach María: {len(maria_athletes)}")
     assert any(a["user_id"] == "user123" for a in maria_athletes)
 
-    print("\n✅ TODAS LAS PRUEBAS BACKEND MULTI-ROL PASARON CON ÉXITO.")
+    print("\n[OK] TODAS LAS PRUEBAS BACKEND MULTI-ROL PASARON CON ÉXITO.")
 
 if __name__ == "__main__":
     test_multirole_system()
