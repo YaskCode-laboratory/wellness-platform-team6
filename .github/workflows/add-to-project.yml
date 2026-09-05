@@ -18,5 +18,5 @@ jobs:
           ITEM_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
         run: |
           gh project item-add 1 \
-            --owner "${{ github.repository_owner }}" \
-            --url "$ITEM_URL" || true
+            --owner YaskCode-laboratory \
+            --url "$ITEM_URL"
