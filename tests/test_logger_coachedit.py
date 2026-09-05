@@ -1,3 +1,7 @@
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'backend')))
 from app import database
 
 def test_logger_and_coach_edit():
@@ -54,7 +58,7 @@ def test_logger_and_coach_edit():
     u_data = database.get_user_profile("user456")
     assert u_data["personal_info"]["name"] == "Ana Gómez Modificada"
 
-    print("\n✅ TODAS LAS PRUEBAS BACKEND PASARON CON ÉXITO.")
+    print("\n[OK] TODAS LAS PRUEBAS BACKEND PASARON CON ÉXITO.")
 
 if __name__ == "__main__":
     test_logger_and_coach_edit()
