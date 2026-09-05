@@ -1,5 +1,5 @@
 """
-Módulo Wellness Coach Agent 2.0 — Patrón ReAct y Flujo de Razonamiento (Issue #16 & Issue #17)
+Módulo Wellness Coach Agent 2.0 — Patrón ReAct y Flujo de Razonamiento (Issue #16 & Issue #18)
 Implementa el ciclo de razonamiento Thought -> Action -> Observation -> Final Answer con prevención de bucles infinitos.
 """
 
@@ -8,7 +8,10 @@ import sys
 import json
 from typing import Dict, Any, List, Tuple
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
 try:
     from app.rag_pipeline import RAGPipeline
 except ModuleNotFoundError:
@@ -97,10 +100,6 @@ class ReActAgent:
 
     # --- CICLO DE RAZONAMIENTO REACT ---
     def run_react_loop(self, user_prompt: str, athlete_id: str = None, max_iterations: int = 5) -> Dict[str, Any]:
-        """
-        Ejecuta el bucle ReAct (Thought -> Action -> Observation -> Final Answer).
-        Incluye protección anti-bucles repetidos.
-        """
         steps = []
         executed_tool_calls = set()
         
@@ -171,7 +170,6 @@ class ReActAgent:
         }
 
     def _synthesize_final_answer(self, prompt: str, steps: List[Dict[str, Any]]) -> str:
-        """Sintetiza la respuesta final basándose en las observaciones acumuladas."""
         athlete_info = {}
         contraindications = {}
         for s in steps:

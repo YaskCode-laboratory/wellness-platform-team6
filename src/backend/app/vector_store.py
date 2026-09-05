@@ -1,5 +1,5 @@
 """
-Módulo Vector Database Store — Wellness Lift (Issue #8 & Issue #17)
+Módulo Vector Database Store — Wellness Lift (Issue #8 & Issue #18)
 Implementa el motor de base de datos vectorial liviano basado en Similitud del Coseno (Cosine Similarity)
 e indexación persistente para la búsqueda semántica del sistema RAG.
 """
@@ -18,13 +18,11 @@ class VectorDatabaseStore:
         self.idf: Dict[str, float] = {}
 
     def _tokenize(self, text: str) -> List[str]:
-        """Normalización y tokenización de texto."""
         text_clean = re.sub(r'[^\w\s]', ' ', text.lower())
         words = [w for w in text_clean.split() if len(w) > 2]
         return words
 
     def _compute_vector(self, text: str) -> Dict[str, float]:
-        """Calcula el vector de frecuencia de términos ponderado (TF-IDF vector representation)."""
         tokens = self._tokenize(text)
         if not tokens:
             return {}
@@ -44,12 +42,10 @@ class VectorDatabaseStore:
         return {k: v / norm for k, v in vector.items()}
 
     def _cosine_similarity(self, vec1: Dict[str, float], vec2: Dict[str, float]) -> float:
-        """Calcula la similitud del coseno entre dos vectores de alta dimensión."""
         dot_product = sum(val * vec2.get(term, 0.0) for term, val in vec1.items())
         return float(dot_product)
 
     def fit_and_index(self, chunks: List[Dict[str, Any]]) -> None:
-        """Indexa los chunks construyendo el vocabulario, IDF y vectores de similitud."""
         self.documents = chunks
         num_docs = len(chunks)
         if num_docs == 0:
@@ -67,9 +63,6 @@ class VectorDatabaseStore:
             doc["vector"] = self._compute_vector(doc["text"])
 
     def search_similarity(self, query: str, k: int = 3) -> List[Tuple[Dict[str, Any], float]]:
-        """
-        Consulta la base vectorial retornando los K chunks más relevantes semánticamente.
-        """
         if not self.documents:
             return []
 
@@ -84,7 +77,6 @@ class VectorDatabaseStore:
         return scored_results[:k]
 
     def save_index(self, filepath: str) -> None:
-        """Guarda la base de datos vectorial serializada en disco."""
         data = {
             "collection_name": self.collection_name,
             "idf": self.idf,
@@ -104,7 +96,6 @@ class VectorDatabaseStore:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
     def load_index(self, filepath: str) -> None:
-        """Carga el índice vectorial serializado desde disco."""
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
         self.collection_name = data.get("collection_name", self.collection_name)

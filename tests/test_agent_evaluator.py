@@ -1,13 +1,22 @@
 """
-Pruebas Automatizadas de la Suite de Evaluación del Agente — Wellness Lift (Issue #17)
+Pruebas Automatizadas de la Suite de Evaluación del Agente — Wellness Lift (Issue #17 & Issue #18)
 """
 
 import unittest
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'backend')))
-from app.agent_evaluator import AgentQualityEvaluator
+backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'backend'))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+try:
+    from app.agent_evaluator import AgentQualityEvaluator
+except ModuleNotFoundError:
+    try:
+        from agent_evaluator import AgentQualityEvaluator
+    except ModuleNotFoundError:
+        from .agent_evaluator import AgentQualityEvaluator
 
 class TestAgentQualityEvaluator(unittest.TestCase):
     def setUp(self):

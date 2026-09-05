@@ -1,5 +1,5 @@
 """
-Módulo Agent Quality Evaluator — Wellness Coach Agent 2.0 (Issue #17)
+Módulo Agent Quality Evaluator — Wellness Coach Agent 2.0 (Issue #17 & Issue #18)
 Suite de evaluación de comportamiento, memoria conversacional, Tool Calling y razonamiento ReAct.
 """
 
@@ -15,10 +15,7 @@ if backend_dir not in sys.path:
 try:
     from app.react_agent import ReActAgent
 except ModuleNotFoundError:
-    try:
-        from react_agent import ReActAgent
-    except ModuleNotFoundError:
-        from .react_agent import ReActAgent
+    from react_agent import ReActAgent
 
 class AgentQualityEvaluator:
     def __init__(self):
@@ -62,7 +59,6 @@ class AgentQualityEvaluator:
         ]
 
     def evaluate_test_case(self, tc: Dict[str, Any]) -> Dict[str, Any]:
-        """Ejecuta y evalúa un caso de prueba específico."""
         res = self.react_agent.run_react_loop(tc["prompt"], athlete_id="user123")
         executed_tools = [s["action"] for s in res["steps"]]
         
@@ -86,7 +82,6 @@ class AgentQualityEvaluator:
         }
 
     def run_suite(self) -> Dict[str, Any]:
-        """Ejecuta la suite completa de evaluación de calidad del agente."""
         results = []
         passed_count = 0
 
@@ -113,7 +108,6 @@ class AgentQualityEvaluator:
             ]
         }
         return summary
-
 
 if __name__ == "__main__":
     evaluator = AgentQualityEvaluator()
