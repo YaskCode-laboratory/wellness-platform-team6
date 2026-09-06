@@ -588,3 +588,17 @@ def generate_chat_response(user_id: str, message: str) -> str:
     return _generate_local_chat_response(user_id, message)
 
 
+class WellnessCoachAgent:
+    """Fachada compatible del Wellness Coach Agent para interoperabilidad multiagente."""
+
+    def generate_response(self, user_id: str, message: str) -> str:
+        return generate_chat_response(user_id, message)
+
+    def generate_routine(self, user_id: str) -> dict:
+        return generate_weekly_routine(user_id)
+
+
+_agent_instance = WellnessCoachAgent()
+
+
+
