@@ -1,6 +1,7 @@
 """
 Suite de Pruebas Unitarias e Integración para la Generación de Embeddings (Issue #7 - S1-03).
-Verifica dimensionalidad, consistencia vectorial, norma L2, búsqueda semántica y estructura del Vector Store.
+Verifica dimensionalidad, consistencia vectorial, norma L2, determinismo inter-proceso con SHA-256,
+búsqueda semántica por similitud coseno y metadatos explícitos del Vector Store.
 """
 
 import json
@@ -27,7 +28,7 @@ except ModuleNotFoundError:
 
 class TestEmbeddings(unittest.TestCase):
     def setUp(self):
-        self.generator = EmbeddingsGenerator(model_name="sentence-transformers/all-MiniLM-L6-v2", vector_dim=384)
+        self.generator = EmbeddingsGenerator(model_name="local-deterministic-hashing-384d", vector_dim=384)
 
     def test_embedding_dimensionality(self):
         """Verifica que el vector generado tenga exactamente 384 dimensiones."""
@@ -36,6 +37,7 @@ class TestEmbeddings(unittest.TestCase):
 
         self.assertEqual(emb_data["dimension"], 384)
         self.assertEqual(len(emb_data["vector"]), 384)
+        self.assertEqual(emb_data["model"], "local-deterministic-hashing-384d")
         self.assertIsInstance(emb_data["vector"], list)
 
     def test_embedding_l2_normalization(self):
@@ -46,6 +48,14 @@ class TestEmbeddings(unittest.TestCase):
 
         norm = math.sqrt(sum(x * x for x in vector))
         self.assertAlmostEqual(norm, 1.0, places=3)
+
+    def test_deterministic_reproducibility(self):
+        """Verifica que dos invocaciones independientes generen exactamente el mismo vector (determinismo SHA-256)."""
+        text = "Rehabilitación de hernia discal lumbar con ejercicios de cadena posterior."
+        vec1 = self.generator.generate_embedding(text)["vector"]
+        vec2 = self.generator.generate_embedding(text)["vector"]
+
+        self.assertEqual(vec1, vec2)
 
     def test_empty_text_embedding(self):
         """Verifica el comportamiento seguro al procesar cadenas vacías."""
@@ -89,6 +99,7 @@ class TestEmbeddings(unittest.TestCase):
         self.assertIn("vectors", data)
         self.assertEqual(data["metadata"]["total_chunks"], len(data["vectors"]))
         self.assertEqual(data["metadata"]["vector_dimension"], 384)
+        self.assertEqual(data["metadata"]["embedding_model"], "local-deterministic-hashing-384d")
 
         for item in data["vectors"]:
             self.assertIn("chunk_id", item)
@@ -100,4 +111,3 @@ class TestEmbeddings(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
