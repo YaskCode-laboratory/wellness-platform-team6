@@ -24,6 +24,11 @@ class EmbeddingsGenerator:
         text = re.sub(r"[^\w\s]", " ", text)
         return " ".join(text.split())
 
+    def _hash_str(self, s: str) -> int:
+        """Hash determinista independiente de PYTHONHASHSEED."""
+        import zlib
+        return zlib.adler32(s.encode("utf-8"))
+
     def _generate_local_embedding(self, text: str) -> List[float]:
         """
         Genera un vector determinista de 384 dimensiones con normalización L2
@@ -37,12 +42,12 @@ class EmbeddingsGenerator:
         if not words:
             return vector
 
-        # Hashing semántico con pesaje de frecuencia y posición
+        # Hashing semántico determinista con pesaje de frecuencia y posición
         for idx, word in enumerate(words):
-            word_hash = hash(word)
-            pos_1 = abs(word_hash) % self.vector_dim
-            pos_2 = abs(hash(f"{word}_{idx}")) % self.vector_dim
-            pos_3 = abs(hash(f"{word}_char_len_{len(word)}")) % self.vector_dim
+            word_hash = self._hash_str(word)
+            pos_1 = word_hash % self.vector_dim
+            pos_2 = self._hash_str(f"{word}_{idx}") % self.vector_dim
+            pos_3 = self._hash_str(f"{word}_char_len_{len(word)}") % self.vector_dim
 
             weight = 1.0 + (0.1 * math.log(len(word) + 1))
             vector[pos_1] += weight
