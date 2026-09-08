@@ -3,6 +3,7 @@ Módulo de Generación de Embeddings y Métricas de Similitud Semántica.
 Soporta generación de vectores locales de 384 dimensiones y Gemini Cloud API (768 dimensiones).
 """
 
+import hashlib
 import math
 import os
 import re
@@ -14,7 +15,7 @@ class EmbeddingsGenerator:
     Generador de representaciones vectoriales (embeddings) para el motor RAG de Wellness Lift.
     """
 
-    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2", vector_dim: int = 384):
+    def __init__(self, model_name: str = "local-deterministic-hashing-384d", vector_dim: int = 384):
         self.model_name = model_name
         self.vector_dim = vector_dim
 
@@ -27,8 +28,8 @@ class EmbeddingsGenerator:
     def _generate_local_embedding(self, text: str) -> List[float]:
         """
         Genera un vector determinista de 384 dimensiones con normalización L2
-        basado en descomposición semántica y hashing de n-gramas.
-        Garantiza consistencia dimensional de 384 float y reproducibilidad 100% offline.
+        basado en descomposición semántica y hashing SHA-256 consistente entre plataformas.
+        Garantiza consistencia dimensional de 384 floats y reproducibilidad 100% offline.
         """
         clean_str = self._clean_text(text)
         words = clean_str.split()
@@ -37,19 +38,20 @@ class EmbeddingsGenerator:
         if not words:
             return vector
 
-        # Hashing semántico con pesaje de frecuencia y posición
         for idx, word in enumerate(words):
-            word_hash = hash(word)
-            pos_1 = abs(word_hash) % self.vector_dim
-            pos_2 = abs(hash(f"{word}_{idx}")) % self.vector_dim
-            pos_3 = abs(hash(f"{word}_char_len_{len(word)}")) % self.vector_dim
+            h1 = int(hashlib.sha256(word.encode("utf-8")).hexdigest()[:8], 16)
+            h2 = int(hashlib.sha256(f"{word}_{idx}".encode("utf-8")).hexdigest()[:8], 16)
+            h3 = int(hashlib.sha256(f"{word}_len_{len(word)}".encode("utf-8")).hexdigest()[:8], 16)
+
+            pos_1 = h1 % self.vector_dim
+            pos_2 = h2 % self.vector_dim
+            pos_3 = h3 % self.vector_dim
 
             weight = 1.0 + (0.1 * math.log(len(word) + 1))
             vector[pos_1] += weight
             vector[pos_2] += weight * 0.5
             vector[pos_3] += weight * 0.25
 
-        # Normalización L2 para garantizar que ||v|| = 1.0
         norm = math.sqrt(sum(x * x for x in vector))
         if norm > 0:
             vector = [round(x / norm, 6) for x in vector]
@@ -60,7 +62,7 @@ class EmbeddingsGenerator:
         """
         Genera el embedding para un fragmento de texto individual.
         Si se provee api_key y la librería google.generativeai está disponible, utiliza text-embedding-004.
-        De lo contrario, utiliza el modelo local de 384 dimensiones.
+        De lo contrario, utiliza el modelo local determinista de 384 dimensiones.
         """
         if api_key or os.getenv("GEMINI_API_KEY"):
             try:
@@ -97,7 +99,7 @@ class EmbeddingsGenerator:
         for chunk in chunks:
             text_to_embed = chunk.get("text", "")
             emb_data = self.generate_embedding(text_to_embed)
-            
+
             chunk_with_emb = dict(chunk)
             chunk_with_emb["embedding_model"] = emb_data["model"]
             chunk_with_emb["embedding_dim"] = emb_data["dimension"]

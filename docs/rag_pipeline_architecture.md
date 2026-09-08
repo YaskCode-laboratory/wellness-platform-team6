@@ -1,7 +1,7 @@
 # ⚙️ Arquitectura del Pipeline RAG End-to-End — Wellness Lift (Issue #9)
 
 ## 1. Resumen Ejecutivo
-Este documento describe el flujo completo, los componentes de software y los diagramas de secuencia del **Pipeline RAG End-to-End** implementado para la plataforma **Wellness Lift**, respondiendo al requerimiento **[S1-05 - Implementar pipeline RAG] (Issue #9)**.
+Este documento describe el flujo completo, los componentes de software, la trazabilidad de la cadena consolidada **S1-03 $\rightarrow$ S1-04 $\rightarrow$ S1-05** y los mecanismos de generación (Live LLM vs. Fallback Determinista) del **Pipeline RAG End-to-End** implementado para la plataforma **Wellness Lift** ([Issue #9](https://github.com/YaskCode-laboratory/wellness-platform-team6/issues/9)).
 
 ---
 
@@ -11,38 +11,72 @@ Este documento describe el flujo completo, los componentes de software y los dia
 sequenceDiagram
     autonumber
     actor Usuario as Atleta / Coach
-    participant API as FastAPI Backend
-    participant Pipeline as RAG Pipeline
-    participant VectorDB as Vector Database Store
-    participant LLM as Modelo de Lenguaje (OpenRouter / Gemini)
+    participant Pipeline as RAGPipeline (src/backend/app/rag_pipeline.py)
+    participant Embeddings as EmbeddingsGenerator (S1-03, 384d)
+    participant VectorDB as VectorDatabaseStore (S1-04, Cosine Similarity)
+    participant LLM as Motor LLM (OpenRouter / Gemini API)
+    participant Fallback as Generador Determinista Offline
 
-    Usuario->>API: POST /api/v1/ai/routine (Consulta + Perfil)
-    API->>Pipeline: execute_pipeline(query, user_profile)
-    Pipeline->>VectorDB: search_similarity(query_vector, k=3)
-    VectorDB-->>Pipeline: Retorna Top-K Chunks Relevantes
-    Pipeline->>Pipeline: build_augmented_prompt(Contexto + Perfil)
-    Pipeline->>LLM: Invocación con Prompt Aumentado
-    LLM-->>Pipeline: Respuesta Generada con Fuentes Citadas
-    Pipeline-->>API: Payload RAG Estructurado
-    API-->>Usuario: Respuesta Final Validada Biomecánicamente
+    Usuario->>Pipeline: run_pipeline(query, user_profile, top_k=2)
+    Pipeline->>Embeddings: generate_embedding(query)
+    Embeddings-->>Pipeline: Vector denso 384d (normalizado L2)
+    Pipeline->>VectorDB: search_similarity(query_vector, k=2, mode="dense")
+    VectorDB-->>Pipeline: Top-K Chunks Relevantes + Scores
+    Pipeline->>Pipeline: build_augmented_prompt(Contexto + Perfil Atleta)
+    
+    alt Credenciales LLM Activas (OPENROUTER_API_KEY / GEMINI_API_KEY)
+        Pipeline->>LLM: Invocación con Prompt Aumentado
+        LLM-->>Pipeline: Respuesta Generada (mode: "openrouter_live" | "gemini_live")
+    else Modo Offline / CI / Sin Credenciales
+        Pipeline->>Fallback: Síntesis Basada en Evidencia y Reglas Científicas
+        Fallback-->>Pipeline: Respuesta Estructurada (mode: "fallback_simulated")
+    end
+
+    Pipeline-->>Usuario: Payload RAG Estructurado (Respuesta + Fuentes + Metadatos)
 ```
 
 ---
 
 ## 3. Etapas del Pipeline RAG (`src/backend/app/rag_pipeline.py`)
 
-1. **Etapa 1: Ingesta y Vectorización de la Consulta**: Procesa la entrada del usuario y la convierte a vector ponderado TF-IDF L2.
-2. **Etapa 2: Recuperación Semántica en Vector DB**: Consulta la base vectorial persistida (`data/vector_store/vector_index.json`) y extrae los 3 chunks con mayor coeficiente de similitud del coseno.
-3. **Etapa 3: Aumento de Contexto (*Context Augmentation*)**: Inyecta el perfil de salud del atleta (ej. *Hernia Discal L4-L5*) y los fragmentos de conocimiento recuperados dentro de la estructura formal del prompt.
-4. **Etapa 4: Inferencia y Generación LLM**: El motor del backend (`src/backend/app/agent.py`) genera la respuesta fundamentada estrictamente en la evidencia científica recuperada.
-5. **Etapa 5: Citado de Fuentes y Respuesta Estructurada**: Retorna el texto generado citando los documentos fuente (`medical_adaptations.md`, `hypertrophy_periodization.md`, etc.).
+1. **Etapa 1: Ingesta y Vectorización de Consulta (S1-03)**: Transforma la consulta en un vector denso de 384 dimensiones mediante `EmbeddingsGenerator` (`local-deterministic-hashing-384d`).
+2. **Etapa 2: Recuperación Semántica en Vector DB (S1-04)**: Consulta `VectorDatabaseStore` (`data/vector_store/vector_index.json`) calculando Similitud del Coseno entre el vector de consulta y los vectores de los chunks indexados.
+3. **Etapa 3: Aumento de Contexto (*Context Augmentation*)**: Inyecta el perfil de salud del atleta (ej. *Hernia Discal L4-L5*, nivel de entrenamiento) y los fragmentos científicos recuperados con sus fuentes bibliográficas dentro del prompt estructurado.
+4. **Etapa 4: Inferencia y Generación**:
+   - **Modo Producción (Live LLM)**: Si `OPENROUTER_API_KEY` o `GEMINI_API_KEY` están configuradas y disponibles, delega la inferencia al modelo externo.
+   - **Modo Fallback / Simulado Determinista**: Si no hay conexión o claves de API configuradas, activa un motor determinista estructurado que sintetiza las sustituciones biomecánicas basándose en las directrices de los chunks recuperados, garantizando 100% de reproducibilidad y estabilidad en CI/CD.
+5. **Etapa 5: Payload Trazable y Citado de Fuentes**: Retorna un objeto estructurado que incluye:
+   - `retrieved_chunks`: Lista de chunks con scores de similitud y metadatos de embeddings.
+   - `sources`: Archivos fuente citados (`medical_adaptations.md`, `biomechanics_and_safety.md`, etc.).
+   - `generation_mode`: Indicador explícito del modo (`openrouter_live`, `gemini_live` o `fallback_simulated`).
+   - `rag_response`: Texto final de la recomendación biomecánica.
 
 ---
 
-## 4. Verificación Automatizada
+## 4. Pruebas de Ejecución End-to-End
 
-La integración fue probada exitosamente con el script `scripts/test_rag_pipeline.py` y la suite de pruebas `tests/test_rag_pipeline.py`:
+Resultados obtenidos mediante el script reproducible `scripts/test_rag_pipeline.py`:
+
+| Caso de Prueba | Consulta | Fuentes Citadas | Modo de Generación |
+|---|---|---|---|
+| **Hernia Discal L4-L5** | *¿Qué ejercicios debo reemplazar si sufro de una hernia discal lumbar L4-L5?* | `medical_adaptations.md`, `biomechanics_and_safety.md` | `fallback_simulated` / `live` |
+| **Sobrecarga Progresiva** | *¿Cuáles son las reglas de sobrecarga progresiva para maximizar la hipertrofia?* | `biomechanics_and_safety.md`, `hypertrophy_periodization.md` | `fallback_simulated` / `live` |
+| **Valgo de Rodilla** | *Alineación articular y prevención de valgo de rodilla en sentadilla* | `medical_adaptations.md`, `biomechanics_and_safety.md` | `fallback_simulated` / `live` |
+
+---
+
+## 5. Verificación Automatizada
+
+La suite de pruebas en `tests/test_rag_pipeline.py` valida:
+1. `test_context_retrieval_dense_384d`: Recuperación semántica consumiendo los embeddings de 384d.
+2. `test_context_retrieval_tfidf_mode`: Recuperación mediante baseline TF-IDF.
+3. `test_augmented_prompt_construction`: Construcción del prompt aumentado con perfil y fuentes.
+4. `test_full_pipeline_execution_metadata`: Trazabilidad completa de metadatos y modo de generación.
+5. `test_lumbar_contraindications_synthesis`: Validación de sustituciones para patologías lumbares.
+6. `test_hypertrophy_principles_synthesis`: Validación de principios de hipertrofia y sobrecarga.
+
 ```bash
 python -m unittest tests/test_rag_pipeline.py
-# Ran 3 tests in 0.004s - OK
+# Ran 6 tests in 0.012s - OK
 ```
+
