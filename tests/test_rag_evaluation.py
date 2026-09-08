@@ -43,7 +43,7 @@ def test_single_query_evaluation(evaluator):
     query_item = {
         "query_id": "TEST_01",
         "category": "Medical Substitutions",
-        "query": "Hernia discal L4-L5 lumbar contraindicaciones",
+        "query": "¿Qué ejercicios están contraindicados si el atleta tiene hernia discal L4-L5 lumbar y cuáles son sus sustitutos seguros?",
         "expected_relevant_chunk_ids": [
             "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0"
         ],
