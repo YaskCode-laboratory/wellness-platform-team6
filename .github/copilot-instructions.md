@@ -4,7 +4,7 @@ Al realizar una revisión de Pull Request en este repositorio:
 
 - Responde en español.
 - Considera el Issue relacionado y sus criterios de aceptación como el contrato principal de la implementación.
-- Identifica el Issue al que responde el Pull Request.
+- Cuando exista un Issue relacionado, identifícalo; si no existe o no puede verificarse, indícalo explícitamente.
 - Compara la implementación con los criterios de aceptación del Issue, no únicamente con aspectos de estilo de código.
 - Revisa los archivos modificados por el Pull Request.
 - Verifica las pruebas automatizadas y la evidencia disponible en CI.
