@@ -1,5 +1,5 @@
 """
-Módulo de Generación de Embeddings y Métricas de Similitud Semántica — Wellness Lift (Issue #7 - S1-03).
+Módulo de Generación de Representaciones Vectoriales y Similitud Coseno — Wellness Lift (Issue #7 - S1-03).
 Implementa un generador vectorial determinista basado en proyección espacial por hashing SHA-256 (384 dimensiones)
 con normalización L2, y soporte opcional para proveedores de embeddings en la nube (Google Gemini API).
 """
@@ -18,9 +18,9 @@ class EmbeddingsGenerator:
 
     def __init__(self, model_name: str = "local-deterministic-hashing-384d", vector_dim: int = 384):
         """
-        Inicializa el generador de embeddings.
-        :param model_name: Identificador formal del modelo/mecanismo de embedding ('local-deterministic-hashing-384d' o 'models/text-embedding-004').
-        :param vector_dim: Dimensionalidad del espacio vectorial (384 dimensiones estándar para el motor local).
+        Inicializa el generador de representaciones vectoriales.
+        :param model_name: Identificador formal del modelo/mecanismo ('local-deterministic-hashing-384d' o 'models/text-embedding-004').
+        :param vector_dim: Dimensionalidad del espacio vectorial (384 dimensiones estándar para la representación local).
         """
         self.model_name = model_name
         self.vector_dim = vector_dim
@@ -43,8 +43,8 @@ class EmbeddingsGenerator:
 
     def _generate_local_embedding(self, text: str) -> List[float]:
         """
-        Genera un vector determinista de 384 dimensiones con normalización L2
-        basado en descomposición semántica y proyección espacial por hashing SHA-256.
+        Genera una representación vectorial determinista de 384 dimensiones con normalización L2
+        basada en hashing SHA-256 de términos, longitud y ponderación posicional.
         Garantiza consistencia dimensional estricta de 384 floats y reproducibilidad total offline.
         """
         clean_str = self._clean_text(text)
