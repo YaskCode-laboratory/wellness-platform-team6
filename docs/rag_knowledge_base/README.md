@@ -6,14 +6,14 @@ Este directorio contiene la arquitectura documental y el cuerpo de conocimiento 
 
 ## 📌 Estructura y Taxonomía de Documentos
 
-`
+```
 docs/rag_knowledge_base/
 ├── biomechanics_and_safety.md      # Principios biomecánicos y seguridad articular
 ├── hypertrophy_periodization.md   # Programación de hipertrofia y sobrecarga progresiva
 ├── medical_adaptations.md          # Matriz de contraindicaciones y ejercicios sustitutos
 ├── knowledge_base_manifest.json    # Manifiesto de metadatos e índices del motor RAG
 └── README.md                       # Documentación del diseño y criterios RAG
-`
+```
 
 ---
 
@@ -33,7 +33,7 @@ Para garantizar la máxima validez científica y trazabilidad de las reglas clí
 - **Hipertensión Arterial y Control Cardiovascular:**
   - **Pescatello, L. S., MacDonald, H. V., Ash, G. I., et al. (2019).** *Exercise and Hypertension: Position Stand*. Medicine & Science in Sports & Exercise, 51(6), 1314-1323. American College of Sports Medicine.
 
-### 2. Biomecánica y Seguridad Articular (iomechanics_and_safety.md)
+### 2. Biomecánica y Seguridad Articular (biomechanics_and_safety.md)
 - **National Strength and Conditioning Association (NSCA) — Haff, G. G., & Triplett, N. T. (Eds.) (2016).** *Essentials of Strength Training and Conditioning* (4.ª edición). Human Kinetics. ISBN: 978-1-4925-0162-6.
 - **International Society of Biomechanics (ISB) — Nigg, B. M., & Herzog, W. (Eds.) (2007).** *Biomechanics of the Musculo-skeletal System* (3.ª edición). John Wiley & Sons. ISBN: 978-0-470-01767-8.
 

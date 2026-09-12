@@ -5,7 +5,7 @@ Proporciona los principios de programación de volumen, intensidad, selección d
 
 ## 2. Mecanismos de Hipertrofia
 - **Tensión Mecánica**: Estímulo principal para el reclutamiento de unidades motoras de alto umbral.
-- **Sobrecarga Progresiva**: Incremento sistemático del volumen semanal total ( = Series 	imes Repeticiones 	imes Carga$).
+- **Sobrecarga Progresiva**: Incremento sistemático del volumen semanal total ($Volumen = \text{Series} \times \text{Repeticiones} \times \text{Carga}$).
 - **Autorregulación (RPE / RIR)**: Control de la fatiga central y periférica mediante el índice de esfuerzo percibido (RPE 7-9) y repeticiones en recámara (RIR 1-3).
 
 ## 3. Periodización por Objetivos
