@@ -1,0 +1,8 @@
+# Archivos de revisión y evaluación docente de YaskCode
+
+/AGENTS.md                                          @yaskelly
+/.github/copilot-instructions.md                   @yaskelly
+/.github/skills/yaskcode-se-code-review/**         @yaskelly
+
+# Proteger también el propio archivo CODEOWNERS
+/.github/CODEOWNERS                                @yaskelly
