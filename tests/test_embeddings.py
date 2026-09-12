@@ -1,7 +1,7 @@
 """
-Suite de Pruebas Unitarias e Integración para la Generación de Embeddings (Issue #7 - S1-03).
+Suite de Pruebas Unitarias e Integración para la Generación de Representaciones Vectoriales (Issue #7 - S1-03).
 Verifica dimensionalidad, consistencia vectorial, norma L2, determinismo inter-proceso con SHA-256,
-búsqueda semántica por similitud coseno y metadatos explícitos del Vector Store.
+cálculo de similitud coseno entre representaciones vectoriales e integridad del Vector Store.
 """
 
 import json
@@ -72,8 +72,8 @@ class TestEmbeddings(unittest.TestCase):
         sim = cosine_similarity(vec_a, vec_b)
         self.assertAlmostEqual(sim, 1.0, places=3)
 
-    def test_semantic_similarity_relevance(self):
-        """Verifica que una consulta médica coincida mejor con el chunk de hernia discal que con uno ortogonal."""
+    def test_vector_similarity_relevance(self):
+        """Verifica la relevancia basada en la representación local: una consulta médica coincide mejor con el chunk de términos relacionados que con uno ortogonal."""
         query = "Hernia discal lumbar y ejercicios prohibidos"
         chunk_hernia = "### Contexto: 2. Matriz de Sustitución\nHernia Discal L4-L5 Lumbar contraindica Sentadilla Libre con Barra."
         chunk_hipertrofia = "### Contexto: 3. Periodización\nFase de Hipertrofia: Rangos de 6 a 12 repeticiones."
