@@ -109,6 +109,30 @@ Presta especial atención a afirmaciones como:
 
 No aceptes estas afirmaciones sin evidencia suficiente.
 
+## Control de alcance
+
+Antes de considerar un hallazgo como pendiente bloqueante, determina si pertenece al alcance del Issue revisado.
+
+Clasifica cada hallazgo como:
+
+- Bloqueante del Issue actual;
+- No bloqueante del Issue actual;
+- Incidencia transversal del repositorio;
+- Pertenece a otro Issue o Sprint.
+
+No cambies el estado del Issue actual a "Requiere correcciones" únicamente por una incidencia transversal o por un artefacto correspondiente a otra tarea, salvo que afecte directamente un criterio de aceptación del Issue revisado.
+
+Cuando una validación o problema exista en `main`, en otro workflow, en otro artefacto o en otro Issue:
+
+- repórtalo como incidencia transversal;
+- indica si existe relación con una revisión docente previa;
+- explica si afecta o no al Issue actual;
+- no lo utilices como bloqueo del Issue actual salvo que afecte directamente su entregable o criterio de aceptación.
+
+Cuando un artefacto derivado corresponda a una fase posterior del pipeline, no exigir su actualización dentro del Issue actual salvo que el criterio de aceptación lo requiera explícitamente.
+
+
+
 ## Validaciones automáticas
 
 Cuando estén disponibles, considera:
@@ -199,6 +223,12 @@ Selecciona uno:
 Concluye siempre con:
 
 **Requiere revisión docente final (Human-in-the-Loop).**
+
+## Regla para el estado propuesto
+
+El estado propuesto debe basarse principalmente en el cumplimiento del Issue actual.
+
+Una incidencia transversal o perteneciente a otro Issue puede reportarse, pero no debe cambiar por sí sola el estado del Issue actual a "Requiere correcciones".
 
 ## Restricciones
 
