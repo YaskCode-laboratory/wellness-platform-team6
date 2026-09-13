@@ -130,7 +130,28 @@ Cuando una validación o problema aparezca en `main`, en otro workflow, en otro 
 
 Cuando un artefacto derivado corresponda a una fase posterior del pipeline, no exigir su actualización dentro del Issue actual salvo que el criterio de aceptación lo requiera explícitamente.
 
+Para cada hallazgo determina por separado:
 
+### Alcance
+
+Clasifica el hallazgo como:
+
+- pertenece al Issue actual;
+- incidencia transversal del repositorio;
+- pertenece a otro Issue o Sprint.
+
+### Impacto sobre el Issue actual
+
+Clasifica su impacto como:
+
+- bloqueante;
+- no bloqueante.
+
+El alcance y el impacto son dimensiones independientes.
+
+Una incidencia transversal o perteneciente a otro Issue puede ser no bloqueante para el Issue actual.
+
+Solo clasifica un hallazgo como bloqueante cuando afecte directamente un entregable, criterio de aceptación o evidencia requerida por el Issue actual.
 
 ## Validaciones automáticas
 
