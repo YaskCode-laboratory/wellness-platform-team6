@@ -135,14 +135,15 @@ Clasifica el hallazgo como:
 - incidencia transversal del repositorio;
 - pertenece a otro Issue o Sprint.
 
-### Impacto sobre el Issue actual
+### Impacto sobre el contrato de revisión
 
 Clasifica su impacto como:
 
-- bloqueante;
-- no bloqueante.
+bloqueante/no bloqueante respecto al contrato de revisión
 
 El alcance y el impacto son dimensiones independientes.
+
+
 
 Una incidencia transversal o perteneciente a otro Issue o Sprint puede ser bloqueante o no bloqueante para el Issue actual.
 
