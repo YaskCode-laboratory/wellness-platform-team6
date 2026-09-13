@@ -301,16 +301,15 @@ Aplica estas reglas:
 
 - **Requiere evidencia adicional**: la implementación puede ser técnicamente plausible, pero falta evidencia suficiente para verificar uno o más criterios del contrato de revisión, por ejemplo pruebas, resultados reproducibles, trazabilidad o evidencia de ejecución.
 
-Los hallazgos no bloqueantes, incidencias transversales o problemas pertenecientes a otro Issue o Sprint deben reportarse, pero no deben cambiar por sí solos el estado del Issue actual.
+  Utiliza este estado únicamente cuando la ausencia de evidencia no constituya por sí misma un incumplimiento de un entregable, criterio de aceptación, restricción técnica explícita o requisito obligatorio del contrato de revisión.
 
-Cuando existan simultáneamente correcciones bloqueantes y ausencia de evidencia, utiliza **Requiere correcciones** como estado principal e indica además qué evidencia deberá presentarse después de corregir.
+  Si la evidencia faltante es requerida explícitamente por el contrato de revisión, clasifica el hallazgo como bloqueante y utiliza **Requiere correcciones**.
 
 El estado propuesto debe derivarse del impacto de los hallazgos sobre el contrato de revisión.
 
 Concluye siempre con:
 
 **Requiere revisión docente final (Human-in-the-Loop).**
-
 
 ## Restricciones
 
