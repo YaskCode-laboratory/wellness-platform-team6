@@ -111,32 +111,27 @@ No aceptes estas afirmaciones sin evidencia suficiente.
 
 ## Control de alcance
 
-Antes de considerar un hallazgo como pendiente bloqueante, determina si pertenece al alcance del Issue revisado.
+Antes de determinar si un hallazgo afecta el estado propuesto, identifica primero el contrato de revisión.
 
-Clasifica cada hallazgo como:
+Si existe un Issue verificable:
 
-- Bloqueante del Issue actual;
-- No bloqueante del Issue actual;
-- Incidencia transversal del repositorio;
-- Pertenece a otro Issue o Sprint.
+- utiliza su objetivo, criterios de aceptación, evidencia esperada y restricciones técnicas como contrato principal;
+- evalúa cada hallazgo respecto a ese contrato.
 
-No cambies el estado del Issue actual a "Requiere correcciones" únicamente por una incidencia transversal o por un artefacto correspondiente a otra tarea, salvo que afecte directamente un criterio de aceptación del Issue revisado.
+Si no existe un Issue verificable:
 
-Cuando una validación o problema aparezca en `main`, en otro workflow, en otro artefacto o en otro Issue, determina primero su relación con el Issue actual:
-- clasifícalo según corresponda como bloqueante/no bloqueante del Issue actual, incidencia transversal o perteneciente a otro Issue o Sprint;
-- indica si existe relación con una revisión docente previa;
-- explica si afecta o no al Issue actual;
-- no lo utilices como bloqueo del Issue actual salvo que afecte directamente su entregable o criterio de aceptación.
+- utiliza el alcance declarado del Pull Request como contrato provisional;
+- señala explícitamente la ausencia de Issue como una brecha de trazabilidad;
+- clasifica la trazabilidad como incompleta;
+- no inventes criterios de aceptación que no estén documentados.
 
-Cuando un artefacto derivado corresponda a una fase posterior del pipeline, no exigir su actualización dentro del Issue actual salvo que el criterio de aceptación lo requiera explícitamente.
-
-Para cada hallazgo determina por separado:
+Para cada hallazgo determina y reporta por separado dos dimensiones:
 
 ### Alcance
 
 Clasifica el hallazgo como:
 
-- pertenece al Issue actual;
+- pertenece al Issue actual o al alcance declarado del Pull Request;
 - incidencia transversal del repositorio;
 - pertenece a otro Issue o Sprint.
 
@@ -149,9 +144,30 @@ Clasifica su impacto como:
 
 El alcance y el impacto son dimensiones independientes.
 
-Una incidencia transversal o perteneciente a otro Issue puede ser no bloqueante para el Issue actual.
+Una incidencia transversal o perteneciente a otro Issue o Sprint puede ser bloqueante o no bloqueante para el Issue actual.
 
-Solo clasifica un hallazgo como bloqueante cuando afecte directamente un entregable, criterio de aceptación o evidencia requerida por el Issue actual.
+Solo clasifica un hallazgo como bloqueante cuando afecte directamente alguno de los siguientes elementos del contrato de revisión:
+
+- un entregable requerido;
+- un criterio de aceptación;
+- evidencia requerida;
+- una restricción técnica explícita;
+- la posibilidad de reproducir o verificar el resultado exigido.
+
+Cuando una validación o problema aparezca en `main`, en otro workflow, en otro artefacto o en otro Issue:
+
+1. determina primero su relación con el contrato de revisión;
+2. clasifica su alcance;
+3. clasifica por separado su impacto como bloqueante o no bloqueante;
+4. indica si existe relación con una revisión docente previa;
+5. explica por qué afecta o no al Issue actual.
+
+No utilices un hallazgo como bloqueo del Issue actual únicamente porque se encuentre en `main`, en otro workflow, en otro artefacto o en otro Issue.
+
+Cuando un artefacto derivado corresponda a una fase posterior del pipeline, no exijas su actualización dentro del Issue actual salvo que el contrato de revisión la requiera explícitamente.
+
+El estado propuesto debe derivarse del impacto de los hallazgos sobre el contrato del Issue actual o, si no existe Issue verificable, sobre el alcance declarado del Pull Request.
+
 
 ## Validaciones automáticas
 
@@ -184,33 +200,20 @@ No realices el trabajo por el estudiante cuando la finalidad sea formativa.
 
 ## Formato del reporte
 
-Genera siempre un reporte con esta estructura:
+**Alcance:**  
+Issue actual / incidencia transversal / otro Issue o Sprint.
 
-### Revisión — [Issue / Pull Request]
-
-Breve descripción del alcance revisado.
-
-### Qué fue corregido correctamente
-
-Indica:
-
-- criterios cumplidos;
-- observaciones anteriores atendidas;
-- decisiones técnicas correctas;
-- evidencia válida.
-
-### Qué queda pendiente
-
-Para cada pendiente:
+**Impacto:**  
+Bloqueante / no bloqueante.
 
 **Qué ocurre:**  
-Descripción concreta.
+Descripción concreta del hallazgo.
 
 **Por qué es importante:**  
-Relación con calidad, arquitectura, reproducibilidad, seguridad o trazabilidad.
+Relación con el contrato de revisión.
 
 **Cómo corregirlo:**  
-Orientación concreta.
+Orientación concreta sin realizar el trabajo por el estudiante.
 
 ### Incidencias nuevas
 
