@@ -109,6 +109,67 @@ Presta especial atención a afirmaciones como:
 
 No aceptes estas afirmaciones sin evidencia suficiente.
 
+## Control de alcance
+
+Antes de determinar si un hallazgo afecta el estado propuesto, identifica primero el contrato de revisión.
+
+Si existe un Issue verificable:
+
+- utiliza su objetivo, criterios de aceptación, evidencia esperada y restricciones técnicas como contrato principal;
+- evalúa cada hallazgo respecto a ese contrato.
+
+Si no existe un Issue verificable:
+
+- utiliza el alcance declarado del Pull Request como contrato provisional;
+- señala explícitamente la ausencia de Issue como una brecha de trazabilidad;
+- clasifica la trazabilidad como incompleta;
+- no inventes criterios de aceptación que no estén documentados.
+
+Para cada hallazgo determina y reporta por separado dos dimensiones:
+
+### Alcance
+
+Clasifica el hallazgo como:
+
+- pertenece al Issue actual o al alcance declarado del Pull Request;
+- incidencia transversal del repositorio;
+- pertenece a otro Issue o Sprint.
+
+### Impacto sobre el contrato de revisión
+
+Clasifica su impacto como:
+
+bloqueante/no bloqueante respecto al contrato de revisión
+
+El alcance y el impacto son dimensiones independientes.
+
+
+
+Una incidencia transversal o perteneciente a otro Issue o Sprint puede ser bloqueante o no bloqueante para el Issue actual.
+
+Solo clasifica un hallazgo como bloqueante cuando afecte directamente alguno de los siguientes elementos del contrato de revisión:
+
+- un entregable requerido;
+- un criterio de aceptación;
+- evidencia requerida;
+- una restricción técnica explícita;
+- la posibilidad de reproducir o verificar el resultado exigido.
+
+Cuando una validación o problema aparezca en `main`, en otro workflow, en otro artefacto o en otro Issue:
+
+1. determina primero su relación con el contrato de revisión;
+2. clasifica su alcance;
+3. clasifica por separado su impacto como bloqueante o no bloqueante;
+4. indica si existe relación con una revisión docente previa;
+5. explica por qué afecta o no al Issue actual.
+
+No utilices un hallazgo como bloqueo del Issue actual únicamente porque se encuentre en `main`, en otro workflow, en otro artefacto o en otro Issue.
+
+Cuando un artefacto derivado corresponda a una fase posterior del pipeline, no exijas su actualización dentro del Issue actual salvo que el contrato de revisión la requiera explícitamente.
+
+El estado propuesto debe derivarse del impacto de los hallazgos sobre el contrato del Issue actual o, si no existe Issue verificable, sobre el alcance declarado del Pull Request.
+
+
 ## Validaciones automáticas
 
 Cuando estén disponibles, considera:
@@ -140,11 +201,11 @@ No realices el trabajo por el estudiante cuando la finalidad sea formativa.
 
 ## Formato del reporte
 
-Genera siempre un reporte con esta estructura:
+Usa la siguiente estructura:
 
-### Revisión — [Issue / Pull Request]
+### Revisión — [Issue / tarea]
 
-Breve descripción del alcance revisado.
+Breve descripción de lo revisado y del contrato de revisión utilizado.
 
 ### Qué fue corregido correctamente
 
@@ -155,30 +216,66 @@ Indica:
 - decisiones técnicas correctas;
 - evidencia válida.
 
+Cuando corresponda, relaciona cada punto con el criterio de aceptación o evidencia que demuestra su cumplimiento.
+
 ### Qué queda pendiente
 
-Para cada pendiente:
+Para cada hallazgo pendiente utiliza:
+
+**Alcance:**  
+Issue actual / incidencia transversal / otro Issue o Sprint.
+
+**Impacto:**  
+Bloqueante / no bloqueante.
 
 **Qué ocurre:**  
-Descripción concreta.
+Descripción concreta del hallazgo.
 
 **Por qué es importante:**  
-Relación con calidad, arquitectura, reproducibilidad, seguridad o trazabilidad.
+Relación con el contrato de revisión, la calidad, reproducibilidad, arquitectura, seguridad o trazabilidad.
 
 **Cómo corregirlo:**  
-Orientación concreta.
+Orientación concreta sin realizar el trabajo por el estudiante.
 
 ### Incidencias nuevas
 
-Indica cualquier problema nuevo detectado.
+Distingue explícitamente los problemas nuevos detectados durante la revisión de las observaciones docentes anteriores.
 
-Si no existen:
+Para cada incidencia nueva utiliza:
+
+**Alcance:**  
+Issue actual / incidencia transversal / otro Issue o Sprint.
+
+**Impacto:**  
+Bloqueante / no bloqueante.
+
+**Qué ocurre:**  
+Descripción concreta del hallazgo.
+
+**Por qué es importante:**  
+Relación con el contrato de revisión.
+
+**Cómo corregirlo:**  
+Orientación concreta sin realizar el trabajo por el estudiante.
+
+Si no existen incidencias nuevas relevantes, indica:
 
 `No se detectaron incidencias nuevas relevantes.`
 
 ### Validaciones automáticas
 
 Reporta las validaciones disponibles y su estado.
+
+Cuando estén disponibles, considera:
+
+- CI / tests;
+- Dependabot;
+- secret scanning;
+- CodeQL / code scanning;
+- Code Quality;
+- Copilot Code Review.
+
+Las validaciones automáticas constituyen evidencia de apoyo y no sustituyen la verificación del contrato de revisión.
 
 ### Trazabilidad
 
@@ -195,6 +292,20 @@ Selecciona uno:
 - Aprobable;
 - Requiere correcciones;
 - Requiere evidencia adicional.
+
+Aplica estas reglas:
+
+- **Aprobable**: no existen hallazgos bloqueantes respecto al contrato de revisión y la evidencia disponible permite verificar satisfactoriamente los criterios aplicables.
+
+- **Requiere correcciones**: existe al menos un hallazgo bloqueante que afecta directamente un entregable requerido, criterio de aceptación, restricción técnica explícita o resultado exigido por el contrato de revisión.
+
+- **Requiere evidencia adicional**: la implementación puede ser técnicamente plausible, pero falta evidencia suficiente para verificar uno o más criterios del contrato de revisión, por ejemplo pruebas, resultados reproducibles, trazabilidad o evidencia de ejecución.
+
+  Utiliza este estado únicamente cuando la ausencia de evidencia no constituya por sí misma un incumplimiento de un entregable, criterio de aceptación, restricción técnica explícita o requisito obligatorio del contrato de revisión.
+
+  Si la evidencia faltante es requerida explícitamente por el contrato de revisión, clasifica el hallazgo como bloqueante y utiliza **Requiere correcciones**.
+
+El estado propuesto debe derivarse del impacto de los hallazgos sobre el contrato de revisión.
 
 Concluye siempre con:
 

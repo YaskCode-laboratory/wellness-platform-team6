@@ -9,6 +9,32 @@ Utiliza este flujo cuando revises un Pull Request asociado a un Issue o a una ta
 
 El objetivo no es únicamente detectar errores de código, sino evaluar si el equipo siguió correctamente el proceso de Ingeniería de Software y si existe evidencia suficiente para respaldar lo implementado.
 
+## Fuente de verdad de la revisión
+
+Cuando este repositorio disponga del custom agent:
+
+`.github/agents/yaskcode-se-review.agent.md`
+
+sus reglas de evaluación constituyen la fuente principal para:
+
+- contrato de revisión;
+- control de alcance;
+- clasificación de impacto;
+- criterios de bloqueo;
+- estructura del reporte;
+- estado propuesto;
+- Human-in-the-Loop.
+
+Esta Skill complementa el flujo de revisión, pero no debe definir reglas contradictorias o alternativas a las establecidas por el custom agent.
+
+Para cada hallazgo deben distinguirse dos dimensiones:
+
+- alcance: contrato actual / incidencia transversal / otro Issue o Sprint;
+- impacto respecto al contrato: bloqueante / no bloqueante.
+
+El estado propuesto debe derivarse del impacto de los hallazgos sobre el contrato de revisión.
+
+
 ## Paso 1 — Identificar el contrato de desarrollo
 
 Identifica el Issue asociado al Pull Request.
@@ -139,72 +165,21 @@ Reporta brechas relevantes, por ejemplo:
 
 ## Paso 8 — Elaborar el reporte pedagógico de revisión
 
-Utiliza esta estructura:
+Utiliza obligatoriamente la estructura de reporte definida en:
 
-### Revisión — [Issue / tarea]
+`.github/agents/yaskcode-se-review.agent.md`
 
-Breve descripción del alcance revisado.
+El custom agent constituye la fuente de verdad para:
 
-### Qué fue corregido correctamente
+- estructura del reporte;
+- clasificación de alcance;
+- clasificación de impacto;
+- criterios de bloqueo;
+- trazabilidad;
+- estado propuesto;
+- Human-in-the-Loop.
 
-Indica:
-
-- criterios que se cumplen;
-- observaciones anteriores atendidas;
-- decisiones técnicas correctas;
-- evidencia válida incorporada.
-
-### Qué queda pendiente
-
-Para cada punto pendiente explica:
-
-**Qué ocurre:**  
-Descripción concreta del problema.
-
-**Por qué es importante:**  
-Relación con Ingeniería de Software, calidad, reproducibilidad, arquitectura, seguridad o trazabilidad.
-
-**Cómo corregirlo:**  
-Orientación concreta para que el estudiante pueda resolverlo, sin realizar el trabajo por él.
-
-### Incidencias nuevas
-
-Indica por separado cualquier problema nuevo detectado durante la validación.
-
-Si no existen, escribe:
-
-`No se detectaron incidencias nuevas relevantes.`
-
-### Validaciones automáticas
-
-Reporta, cuando estén disponibles:
-
-- CI / tests;
-- Dependabot;
-- secret scanning;
-- CodeQL / code scanning;
-- Code Quality;
-- Copilot Code Review.
-
-### Trazabilidad
-
-Indica si la cadena:
-
-`Issue → rama → commits → Pull Request → pruebas → evidencia`
-
-es suficiente, parcial o incompleta.
-
-### Estado propuesto
-
-Clasifica el resultado como uno de los siguientes:
-
-- Aprobable;
-- Requiere correcciones;
-- Requiere evidencia adicional.
-
-Concluye siempre con:
-
-**Requiere revisión docente final (Human-in-the-Loop).**
+No mantengas en esta Skill una plantilla alternativa del reporte.
 
 ## Restricciones
 
