@@ -165,68 +165,87 @@ Reporta brechas relevantes, por ejemplo:
 
 ## Paso 8 — Elaborar el reporte pedagógico de revisión
 
-Utiliza esta estructura:
+Utiliza la estructura definida por el custom agent
+`.github/agents/yaskcode-se-review.agent.md`.
 
 ### Revisión — [Issue / tarea]
 
-Breve descripción del alcance revisado.
+Breve descripción de lo revisado y del contrato de revisión utilizado.
 
 ### Qué fue corregido correctamente
 
 Indica:
 
-- criterios que se cumplen;
+- criterios cumplidos;
 - observaciones anteriores atendidas;
 - decisiones técnicas correctas;
-- evidencia válida incorporada.
+- evidencia válida.
 
 ### Qué queda pendiente
 
-Para cada punto pendiente explica:
+Para cada hallazgo pendiente indica:
+
+**Alcance:**  
+Issue actual o alcance declarado del Pull Request / incidencia transversal / otro Issue o Sprint.
+
+**Impacto:**  
+Bloqueante / no bloqueante respecto al contrato de revisión.
 
 **Qué ocurre:**  
-Descripción concreta del problema.
+Descripción concreta del hallazgo.
 
 **Por qué es importante:**  
-Relación con Ingeniería de Software, calidad, reproducibilidad, arquitectura, seguridad o trazabilidad.
+Relación con el contrato de revisión, calidad, reproducibilidad, arquitectura, seguridad o trazabilidad.
 
 **Cómo corregirlo:**  
-Orientación concreta para que el estudiante pueda resolverlo, sin realizar el trabajo por él.
+Orientación concreta sin realizar el trabajo por el estudiante.
 
 ### Incidencias nuevas
 
-Indica por separado cualquier problema nuevo detectado durante la validación.
+Distingue explícitamente cualquier problema nuevo de las observaciones docentes anteriores.
 
-Si no existen, escribe:
+Para cada incidencia nueva utiliza también:
+
+**Alcance:**  
+Issue actual o alcance declarado del Pull Request / incidencia transversal / otro Issue o Sprint.
+
+**Impacto:**  
+Bloqueante / no bloqueante respecto al contrato de revisión.
+
+**Qué ocurre:**  
+Descripción concreta del hallazgo.
+
+**Por qué es importante:**  
+Relación con el contrato de revisión.
+
+**Cómo corregirlo:**  
+Orientación concreta sin realizar el trabajo por el estudiante.
+
+Si no existen:
 
 `No se detectaron incidencias nuevas relevantes.`
 
 ### Validaciones automáticas
 
-Reporta, cuando estén disponibles:
-
-- CI / tests;
-- Dependabot;
-- secret scanning;
-- CodeQL / code scanning;
-- Code Quality;
-- Copilot Code Review.
+Reporta las validaciones disponibles y su estado.
 
 ### Trazabilidad
 
-Indica si la cadena:
+Clasifica la trazabilidad como:
 
-`Issue → rama → commits → Pull Request → pruebas → evidencia`
-
-es suficiente, parcial o incompleta.
+- suficiente;
+- parcial;
+- incompleta.
 
 ### Estado propuesto
 
-Clasifica el resultado como uno de los siguientes:
+Selecciona uno:
 
 - Aprobable;
 - Requiere correcciones;
 - Requiere evidencia adicional.
+
+El estado propuesto debe derivarse principalmente del impacto de los hallazgos sobre el contrato de revisión.
 
 Concluye siempre con:
 
