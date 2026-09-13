@@ -3,6 +3,7 @@
 /AGENTS.md                                          @yaskelly
 /.github/copilot-instructions.md                   @yaskelly
 /.github/skills/yaskcode-se-code-review/**         @yaskelly
+/.github/agents/**                                  @yaskelly
 
 # Proteger también el propio archivo CODEOWNERS
 /.github/CODEOWNERS                                @yaskelly
