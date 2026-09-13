@@ -200,6 +200,48 @@ No realices el trabajo por el estudiante cuando la finalidad sea formativa.
 
 ## Formato del reporte
 
+Usa la siguiente estructura:
+
+### Revisión — [Issue / tarea]
+
+Breve descripción de lo revisado y del contrato de revisión utilizado.
+
+### Qué fue corregido correctamente
+
+Indica:
+
+- criterios cumplidos;
+- observaciones anteriores atendidas;
+- decisiones técnicas correctas;
+- evidencia válida.
+
+Cuando corresponda, relaciona cada punto con el criterio de aceptación o evidencia que demuestra su cumplimiento.
+
+### Qué queda pendiente
+
+Para cada hallazgo pendiente utiliza:
+
+**Alcance:**  
+Issue actual / incidencia transversal / otro Issue o Sprint.
+
+**Impacto:**  
+Bloqueante / no bloqueante.
+
+**Qué ocurre:**  
+Descripción concreta del hallazgo.
+
+**Por qué es importante:**  
+Relación con el contrato de revisión, la calidad, reproducibilidad, arquitectura, seguridad o trazabilidad.
+
+**Cómo corregirlo:**  
+Orientación concreta sin realizar el trabajo por el estudiante.
+
+### Incidencias nuevas
+
+Distingue explícitamente los problemas nuevos detectados durante la revisión de las observaciones docentes anteriores.
+
+Para cada incidencia nueva utiliza:
+
 **Alcance:**  
 Issue actual / incidencia transversal / otro Issue o Sprint.
 
@@ -215,17 +257,24 @@ Relación con el contrato de revisión.
 **Cómo corregirlo:**  
 Orientación concreta sin realizar el trabajo por el estudiante.
 
-### Incidencias nuevas
-
-Indica cualquier problema nuevo detectado.
-
-Si no existen:
+Si no existen incidencias nuevas relevantes, indica:
 
 `No se detectaron incidencias nuevas relevantes.`
 
 ### Validaciones automáticas
 
 Reporta las validaciones disponibles y su estado.
+
+Cuando estén disponibles, considera:
+
+- CI / tests;
+- Dependabot;
+- secret scanning;
+- CodeQL / code scanning;
+- Code Quality;
+- Copilot Code Review.
+
+Las validaciones automáticas constituyen evidencia de apoyo y no sustituyen la verificación del contrato de revisión.
 
 ### Trazabilidad
 
@@ -243,15 +292,12 @@ Selecciona uno:
 - Requiere correcciones;
 - Requiere evidencia adicional.
 
+El estado propuesto debe derivarse principalmente del impacto de los hallazgos sobre el contrato de revisión.
+
 Concluye siempre con:
 
 **Requiere revisión docente final (Human-in-the-Loop).**
 
-## Regla para el estado propuesto
-
-El estado propuesto debe basarse principalmente en el cumplimiento del Issue actual.
-
-Una incidencia transversal o perteneciente a otro Issue puede reportarse, pero no debe cambiar por sí sola el estado del Issue actual a "Requiere correcciones".
 
 ## Restricciones
 
