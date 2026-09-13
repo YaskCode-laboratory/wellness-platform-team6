@@ -9,6 +9,32 @@ Utiliza este flujo cuando revises un Pull Request asociado a un Issue o a una ta
 
 El objetivo no es únicamente detectar errores de código, sino evaluar si el equipo siguió correctamente el proceso de Ingeniería de Software y si existe evidencia suficiente para respaldar lo implementado.
 
+## Fuente de verdad de la revisión
+
+Cuando este repositorio disponga del custom agent:
+
+`.github/agents/yaskcode-se-review.agent.md`
+
+sus reglas de evaluación constituyen la fuente principal para:
+
+- contrato de revisión;
+- control de alcance;
+- clasificación de impacto;
+- criterios de bloqueo;
+- estructura del reporte;
+- estado propuesto;
+- Human-in-the-Loop.
+
+Esta Skill complementa el flujo de revisión, pero no debe definir reglas contradictorias o alternativas a las establecidas por el custom agent.
+
+Para cada hallazgo deben distinguirse dos dimensiones:
+
+- alcance: contrato actual / incidencia transversal / otro Issue o Sprint;
+- impacto respecto al contrato: bloqueante / no bloqueante.
+
+El estado propuesto debe derivarse del impacto de los hallazgos sobre el contrato de revisión.
+
+
 ## Paso 1 — Identificar el contrato de desarrollo
 
 Identifica el Issue asociado al Pull Request.
