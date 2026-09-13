@@ -122,9 +122,8 @@ Clasifica cada hallazgo como:
 
 No cambies el estado del Issue actual a "Requiere correcciones" únicamente por una incidencia transversal o por un artefacto correspondiente a otra tarea, salvo que afecte directamente un criterio de aceptación del Issue revisado.
 
-Cuando una validación o problema exista en `main`, en otro workflow, en otro artefacto o en otro Issue:
-
-- repórtalo como incidencia transversal;
+Cuando una validación o problema aparezca en `main`, en otro workflow, en otro artefacto o en otro Issue, determina primero su relación con el Issue actual:
+- clasifícalo según corresponda como bloqueante/no bloqueante del Issue actual, incidencia transversal o perteneciente a otro Issue o Sprint;
 - indica si existe relación con una revisión docente previa;
 - explica si afecta o no al Issue actual;
 - no lo utilices como bloqueo del Issue actual salvo que afecte directamente su entregable o criterio de aceptación.
