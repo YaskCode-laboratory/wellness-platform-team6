@@ -293,7 +293,19 @@ Selecciona uno:
 - Requiere correcciones;
 - Requiere evidencia adicional.
 
-El estado propuesto debe derivarse principalmente del impacto de los hallazgos sobre el contrato de revisión.
+Aplica estas reglas:
+
+- **Aprobable**: no existen hallazgos bloqueantes respecto al contrato de revisión y la evidencia disponible permite verificar satisfactoriamente los criterios aplicables.
+
+- **Requiere correcciones**: existe al menos un hallazgo bloqueante que afecta directamente un entregable requerido, criterio de aceptación, restricción técnica explícita o resultado exigido por el contrato de revisión.
+
+- **Requiere evidencia adicional**: la implementación puede ser técnicamente plausible, pero falta evidencia suficiente para verificar uno o más criterios del contrato de revisión, por ejemplo pruebas, resultados reproducibles, trazabilidad o evidencia de ejecución.
+
+Los hallazgos no bloqueantes, incidencias transversales o problemas pertenecientes a otro Issue o Sprint deben reportarse, pero no deben cambiar por sí solos el estado del Issue actual.
+
+Cuando existan simultáneamente correcciones bloqueantes y ausencia de evidencia, utiliza **Requiere correcciones** como estado principal e indica además qué evidencia deberá presentarse después de corregir.
+
+El estado propuesto debe derivarse del impacto de los hallazgos sobre el contrato de revisión.
 
 Concluye siempre con:
 
