@@ -165,91 +165,21 @@ Reporta brechas relevantes, por ejemplo:
 
 ## Paso 8 — Elaborar el reporte pedagógico de revisión
 
-Utiliza la estructura definida por el custom agent
-`.github/agents/yaskcode-se-review.agent.md`.
+Utiliza obligatoriamente la estructura de reporte definida en:
 
-### Revisión — [Issue / tarea]
+`.github/agents/yaskcode-se-review.agent.md`
 
-Breve descripción de lo revisado y del contrato de revisión utilizado.
+El custom agent constituye la fuente de verdad para:
 
-### Qué fue corregido correctamente
+- estructura del reporte;
+- clasificación de alcance;
+- clasificación de impacto;
+- criterios de bloqueo;
+- trazabilidad;
+- estado propuesto;
+- Human-in-the-Loop.
 
-Indica:
-
-- criterios cumplidos;
-- observaciones anteriores atendidas;
-- decisiones técnicas correctas;
-- evidencia válida.
-
-### Qué queda pendiente
-
-Para cada hallazgo pendiente indica:
-
-**Alcance:**  
-Issue actual o alcance declarado del Pull Request / incidencia transversal / otro Issue o Sprint.
-
-**Impacto:**  
-Bloqueante / no bloqueante respecto al contrato de revisión.
-
-**Qué ocurre:**  
-Descripción concreta del hallazgo.
-
-**Por qué es importante:**  
-Relación con el contrato de revisión, calidad, reproducibilidad, arquitectura, seguridad o trazabilidad.
-
-**Cómo corregirlo:**  
-Orientación concreta sin realizar el trabajo por el estudiante.
-
-### Incidencias nuevas
-
-Distingue explícitamente cualquier problema nuevo de las observaciones docentes anteriores.
-
-Para cada incidencia nueva utiliza también:
-
-**Alcance:**  
-Issue actual o alcance declarado del Pull Request / incidencia transversal / otro Issue o Sprint.
-
-**Impacto:**  
-Bloqueante / no bloqueante respecto al contrato de revisión.
-
-**Qué ocurre:**  
-Descripción concreta del hallazgo.
-
-**Por qué es importante:**  
-Relación con el contrato de revisión.
-
-**Cómo corregirlo:**  
-Orientación concreta sin realizar el trabajo por el estudiante.
-
-Si no existen:
-
-`No se detectaron incidencias nuevas relevantes.`
-
-### Validaciones automáticas
-
-Reporta las validaciones disponibles y su estado.
-
-### Trazabilidad
-
-Clasifica la trazabilidad como:
-
-- suficiente;
-- parcial;
-- incompleta.
-
-### Estado propuesto
-
-Selecciona uno:
-
-- Aprobable;
-- Requiere correcciones;
-- Requiere evidencia adicional.
-
-El estado propuesto debe derivarse principalmente del impacto de los hallazgos sobre el contrato de revisión.
-
-Concluye siempre con:
-
-**Requiere revisión docente final (Human-in-the-Loop).**
+No mantengas en esta Skill una plantilla alternativa del reporte.
 
 ## Restricciones
 
