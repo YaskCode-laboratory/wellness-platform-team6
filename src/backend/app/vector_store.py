@@ -148,6 +148,12 @@ class VectorDatabaseStore:
             else:
                 raise ValueError("Query debe ser una cadena de texto o una lista de floats")
 
+            if self.embedding_dim and len(query_emb) != self.embedding_dim:
+                raise ValueError(
+                    f"Incompatibilidad dimensional: el vector de consulta tiene dimensión {len(query_emb)}, "
+                    f"pero el índice vectorial espera dimensión {self.embedding_dim} (modelo: {self.embedding_model})."
+                )
+
             for doc in self.documents:
                 doc_emb = doc.get("embedding", [])
                 score = cosine_similarity(query_emb, doc_emb)
@@ -209,4 +215,14 @@ class VectorDatabaseStore:
         
         baseline = data.get("baseline_tfidf", {})
         self.idf = baseline.get("idf", data.get("idf", {}))
+
+        # Sincronizar generador de embeddings interno si el modelo/dimensión difieren
+        if (
+            self.embedding_generator.model_name != self.embedding_model
+            or self.embedding_generator.vector_dim != self.embedding_dim
+        ):
+            self.embedding_generator = EmbeddingsGenerator(
+                model_name=self.embedding_model,
+                vector_dim=self.embedding_dim
+            )
 

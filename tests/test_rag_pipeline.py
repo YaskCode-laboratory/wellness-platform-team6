@@ -81,6 +81,41 @@ class TestRAGPipeline(unittest.TestCase):
         self.assertIn("Tensión Mecánica", result["rag_response"])
         self.assertIn("Autorregulación", result["rag_response"])
 
+    def test_grounded_fallback_custom_chunks(self):
+        """Valida que el fallback determinista se fundamente efectivamente en los fragmentos provistos."""
+        custom_chunks = [
+            {
+                "chunk_id": "custom_rehab#1",
+                "source_file": "rehab_protocols.md",
+                "heading_context": "Protocolo de Codo",
+                "text": "- **Directriz Personalizada**: Sustituir press francés por extensión con mancuerna en banco neutro."
+            },
+            {
+                "chunk_id": "custom_rehab#2",
+                "source_file": "rehab_protocols.md",
+                "heading_context": "Isometría de Hombro",
+                "text": "- **Isometría Estabilizadora**: Mantener contracción isométrica de 5 segundos en rotación externa."
+            }
+        ]
+        response, mode = self.pipeline.generate_llm_response(
+            augmented_prompt="prompt",
+            query="¿Cómo adaptar ejercicio para molestia de codo?",
+            retrieved_chunks=custom_chunks,
+            force_fallback=True
+        )
+        self.assertEqual(mode, "fallback_simulated")
+        self.assertIn("extensión con mancuerna en banco neutro", response)
+        self.assertIn("rehab_protocols.md", response)
+        self.assertIn("Isometría Estabilizadora", response)
+
+    def test_incompatible_embedding_dimension_error(self):
+        """Valida que una consulta con dimensionalidad inconsistente lance un ValueError descriptivo."""
+        incompatible_query_vector = [0.1] * 768  # 768d vs 384d del índice
+        with self.assertRaises(ValueError) as ctx:
+            self.pipeline.vector_store.search_similarity(incompatible_query_vector, k=2, mode="dense")
+        self.assertIn("Incompatibilidad dimensional", str(ctx.exception))
+        self.assertIn("384", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()

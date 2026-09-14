@@ -177,42 +177,87 @@ class RAGPipeline:
         user_profile: Optional[Dict[str, Any]] = None
     ) -> str:
         """
-        Generador de fallback determinista estructurado para entornos offline, CI/CD
-        y ejecución sin credenciales externas de API.
-        Sintetiza la respuesta basándose en los chunks recuperados y el perfil del atleta.
+        Generador de fallback determinista estructurado y fundamentado (grounded)
+        para entornos offline, CI/CD y ejecución sin credenciales externas de API.
+        
+        Sintetiza la respuesta extrayendo directamente evidencia técnica, reglas de
+        sustitución y directrices de los fragmentos recuperados (retrieved_chunks).
         """
-        query_lower = query.lower()
-        profile_lower = str(user_profile).lower() if user_profile else ""
+        if not chunks:
+            return (
+                f"No se encontraron fragmentos de conocimiento relevantes en el índice "
+                f"para responder a la consulta: '{query}'."
+            )
 
-        if "hernia" in query_lower or "lumbar" in query_lower or "lumbar" in profile_lower:
-            return (
-                "Basado en la base de conocimiento biomecánica de Wellness Lift (`medical_adaptations.md`):\n"
-                "1. **Contraindicaciones**: Se debe suspender de inmediato la Sentadilla Libre con Barra y el Peso Muerto Convencional para evitar compresión axial en los discos L4-L5.\n"
-                "2. **Ejercicios Sustitutos Seguros**: Reemplazar por Prensa Inclinada a 45° y Peso Muerto Rumano asistido en polea.\n"
-                "3. **Justificación Biomecánica**: Se eliminan las fuerzas de cizallamiento y la carga compresiva directa sobre la columna vertebral (McGill 2015)."
-            )
-        elif "hipertrofia" in query_lower or "sobrecarga" in query_lower:
-            return (
-                "Basado en los principios de hipertrofia de Wellness Lift (`hypertrophy_periodization.md`):\n"
-                "1. **Tensión Mecánica**: Aplicar sobrecarga progresiva incrementando el volumen efectivo (Series x Reps x Carga).\n"
-                "2. **Autorregulación**: Mantener rangos de RPE 7-9 y RIR 1-3 en series efectivas (Schoenfeld 2020).\n"
-                "3. **Frecuencia**: Distribuir el volumen en 10-20 series semanales por grupo muscular."
-            )
-        elif "valgo" in query_lower or "rodilla" in query_lower:
-            return (
-                "Basado en las pautas de biomecánica y seguridad articular (`biomechanics_and_safety.md`):\n"
-                "1. **Alineación**: Mantener la trayectoria de las rodillas alineada con el 2do y 3er metatarso.\n"
-                "2. **Prevención**: Activar el glúteo medio para evitar el colapso en valgo dinámico durante la fase concéntrica (Escamilla 2012).\n"
-                "3. **Sustitución**: En caso de dolor patelofemoral, limitar la flexión de rodilla a 90° o emplear sentadilla búlgara con torso inclinado."
-            )
-        else:
-            first_source = chunks[0]['source_file'] if chunks else 'corpus científico'
-            heading = chunks[0].get('heading_context', 'General') if chunks else ''
-            return (
-                f"Respuesta generada a partir de {first_source} ({heading}):\n"
-                f"Se aplicaron los principios biomecánicos y criterios de seguridad del sistema "
-                f"para responder de forma fundamentada a la consulta: '{query}'."
-            )
+        extracted_guidelines: List[str] = []
+        sources_list: List[str] = []
+        query_terms = [t.lower() for t in query.split() if len(t) > 2]
+        profile_str = str(user_profile).lower() if user_profile else ""
+
+        for idx, chunk in enumerate(chunks, 1):
+            source = chunk.get("source_file", "corpus")
+            heading = chunk.get("heading_context", "")
+            text = chunk.get("text", "")
+            sources_list.append(f"{source} ({heading})" if heading else source)
+
+            lines = [l.strip() for l in text.split("\n") if l.strip()]
+            for line in lines:
+                if line.startswith("### Contexto:") or line.startswith("| :---"):
+                    continue
+
+                # Procesar filas de tablas Markdown (ej. matrices de adaptaciones médicas)
+                if line.startswith("|") and line.endswith("|"):
+                    cells = [c.strip() for c in line.split("|")[1:-1]]
+                    if len(cells) >= 4 and "Condición" not in cells[0]:
+                        cond, contra, sust, just = cells[0], cells[1], cells[2], cells[3]
+                        line_lower = line.lower()
+                        is_relevant = any(t in line_lower for t in query_terms) or (
+                            profile_str and any(t in line_lower for t in profile_str.split() if len(t) > 3)
+                        )
+                        if is_relevant or len(extracted_guidelines) < 3:
+                            entry = (
+                                f"Condición '{cond}': Contraindicaciones: {contra}. "
+                                f"Sustitutos Seguros: {sust}. Justificación Biomecánica: {just}"
+                            )
+                            if entry not in extracted_guidelines:
+                                extracted_guidelines.append(entry)
+                    continue
+
+                # Procesar viñetas o directrices
+                clean_line = line
+                if clean_line.startswith(("- ", "* ", "• ")):
+                    clean_line = clean_line[2:].strip()
+                elif clean_line.startswith(("-", "*", "•")):
+                    clean_line = clean_line[1:].strip()
+
+                if len(clean_line) > 10 and not clean_line.startswith("#"):
+                    if clean_line not in extracted_guidelines:
+                        extracted_guidelines.append(clean_line)
+
+        # Si no se extrajeron líneas específicas, utilizar fragmentos textuales del chunk
+        if not extracted_guidelines:
+            for chunk in chunks[:2]:
+                extracted_guidelines.append(chunk.get("text", "")[:200])
+
+        selected_points = extracted_guidelines[:5]
+        evidence_formatted = "\n".join([f"{i+1}. {pt}" for i, pt in enumerate(selected_points)])
+
+        unique_sources = list(dict.fromkeys(sources_list))
+        sources_header = ", ".join([f"`{s}`" for s in unique_sources])
+
+        profile_addon = ""
+        if user_profile:
+            conds = user_profile.get("health_conditions", "Ninguna")
+            if conds and conds.lower() not in ("ninguna", "none", "healthy"):
+                profile_addon = f"\n- **Adaptación al Perfil**: Se aplican restricciones para condición: {conds}."
+
+        response = (
+            f"Basado en la base de conocimiento de Wellness Lift ({sources_header}):\n"
+            f"{evidence_formatted}"
+            f"{profile_addon}\n\n"
+            f"**Fundamentación**: Síntesis construida a partir de los {len(chunks)} fragmentos recuperados para responder: '{query}'."
+        )
+        return response
 
     def generate_llm_response(
         self,
