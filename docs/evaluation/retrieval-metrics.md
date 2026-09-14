@@ -12,7 +12,7 @@ El presente benchmark evalúa exclusivamente el **Desempeño del Motor de Recupe
 > **Delimitación de Alcance**: Esta suite de pruebas evalúa el contexto relevante recuperado desde la base de datos vectorial (`embeddings.json`) en la etapa previa a la generación de lenguaje natural. Métricas generativas como "fidelidad de la respuesta", "groundedness" o "ausencia de alucinaciones" en la salida del LLM corresponden a etapas de evaluación sintética posteriores (S1-05 / Sprint 2) y no forman parte de este benchmark de recuperación.
 
 ### Distinción Metodológica:
-1. **Calidad de Recuperación**: Evaluación estadística de alineación semántica mediante Precision@K, Recall@K y MRR sobre las consultas del benchmark.
+1. **Calidad de Recuperación**: Evaluación estadística de alineación vectorial y relevancia temática mediante Precision@K, Recall@K y MRR sobre las consultas del benchmark.
 2. **Cobertura de Seguridad Médica en Chunks**: Verificación de presencia explícita de ejercicios contraindicados y sustitutos seguros dentro de los textos de los fragmentos recuperados en el Top-K.
 3. **Calidad/Fidelidad Generativa**: Salida textual sintetizada por el LLM (alcance fuera del benchmark de recuperación).
 
@@ -80,7 +80,7 @@ Precisión en Seguridad Médica:  100.00% (4/4 casos médicos aprobados)
 La integridad de esta evaluación depende directamente de la cadena de dependencias del pipeline de datos:
 
 1. **S1-01 (#5 / PR #27 — Base de Conocimiento)**: Estructura los documentos Markdown en `data/knowledge_base/`.
-2. **S1-02 (#6 / PR #28 — Chunking Semántico)**: Genera los fragmentos en `data/processed_chunks/rag_chunks.json`.
+2. **S1-02 (#6 / PR #28 — Estrategia de Chunking Híbrida)**: Genera los fragmentos en `data/processed_chunks/rag_chunks.json`.
 3. **S1-03 / S1-04 (#7, #8 / PR #30 — Vector Store & Embeddings)**: Produce el índice vectorial determinista L2-normalizado en `data/vector_store/embeddings.json`.
 4. **S1-05 (#9 / PR #31 — Pipeline RAG Retriever)**: Implementa la función de similitud coseno y búsqueda Top-K.
 5. **S1-06 (#10 / PR #32 — Suite de Evaluación)**: Consume `embeddings.json` y `test_queries.json` para generar `evaluation_results.json`.
@@ -90,5 +90,5 @@ La integridad de esta evaluación depende directamente de la cadena de dependenc
 ## 🚀 6. Plan de Acción y Oportunidades para Sprint 2
 
 1. **Segmentación de la Matriz Médica**: Dividir la matriz global de lesiones en chunks individuales por patología para mejorar `Precision@K` cuando $K > 1$.
-2. **Mejora en Q07 (Mecanismos de Hipertrofia)**: Ajustar la coincidencia semántica o incorporar expansión de consultas para capturar términos como "reclutamiento de unidades motoras".
+2. **Mejora en Q07 (Mecanismos de Hipertrofia)**: Ajustar la ponderación vectorial o incorporar expansión de consultas para capturar términos como "reclutamiento de unidades motoras".
 3. **Re-Ranking Híbrido Sparse-Dense**: Implementar combinación de BM25 (búsqueda léxica) + Coseno (búsqueda densa) para mejorar el ranking inicial.

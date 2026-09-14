@@ -3,9 +3,9 @@
     "total_queries": 10,
     "medical_queries_evaluated": 4,
     "top_k_evaluated": 3,
-    "mean_precision_at_k": 0.3,
-    "mean_recall_at_k": 0.9,
-    "mean_mrr": 0.7,
+    "mean_precision_at_k": 0.3333,
+    "mean_recall_at_k": 1.0,
+    "mean_mrr": 0.8167,
     "medical_safety_accuracy": 1.0
   },
   "detailed_results": [
@@ -16,31 +16,31 @@
       "top_k": 3,
       "precision_at_k": 0.3333,
       "recall_at_k": 1.0,
-      "mrr": 0.5,
+      "mrr": 1.0,
       "retrieved_chunk_ids": [
-        "medical_adaptations.md#1._dominio_y_alcance-0",
         "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
-        "biomechanics_and_safety.md#1._dominio_y_alcance-0"
+        "medical_adaptations.md#1._dominio_y_alcance-0",
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0"
       ],
-      "top_score": 0.241674,
+      "top_score": 0.251176,
       "safety_passed": true,
       "unwarned_contraindications": [],
       "missing_substitutes": [],
       "retrieved_chunks": [
         {
-          "chunk_id": "medical_adaptations.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.241674,
-          "heading_context": "1. Dominio y Alcance"
-        },
-        {
           "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
-          "similarity_score": 0.206391,
+          "similarity_score": 0.251176,
           "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
         },
         {
-          "chunk_id": "biomechanics_and_safety.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.179757,
+          "chunk_id": "medical_adaptations.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.167226,
           "heading_context": "1. Dominio y Alcance"
+        },
+        {
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.155945,
+          "heading_context": "2. Mecanismos de Hipertrofia"
         }
       ]
     },
@@ -54,28 +54,28 @@
       "mrr": 1.0,
       "retrieved_chunk_ids": [
         "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
-        "medical_adaptations.md#1._dominio_y_alcance-0",
-        "hypertrophy_periodization.md#1._dominio_y_alcance-0"
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+        "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0"
       ],
-      "top_score": 0.436663,
+      "top_score": 0.409176,
       "safety_passed": true,
       "unwarned_contraindications": [],
       "missing_substitutes": [],
       "retrieved_chunks": [
         {
           "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
-          "similarity_score": 0.436663,
+          "similarity_score": 0.409176,
           "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
         },
         {
-          "chunk_id": "medical_adaptations.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.35173,
-          "heading_context": "1. Dominio y Alcance"
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.361296,
+          "heading_context": "2. Mecanismos de Hipertrofia"
         },
         {
-          "chunk_id": "hypertrophy_periodization.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.348191,
-          "heading_context": "1. Dominio y Alcance"
+          "chunk_id": "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
+          "similarity_score": 0.320203,
+          "heading_context": "2. Principios Biomecánicos Fundamentales"
         }
       ]
     },
@@ -89,28 +89,28 @@
       "mrr": 1.0,
       "retrieved_chunk_ids": [
         "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
-        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
-        "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0"
+        "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+        "medical_adaptations.md#1._dominio_y_alcance-0"
       ],
-      "top_score": 0.356713,
+      "top_score": 0.44136,
       "safety_passed": true,
       "unwarned_contraindications": [],
       "missing_substitutes": [],
       "retrieved_chunks": [
         {
           "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
-          "similarity_score": 0.356713,
+          "similarity_score": 0.44136,
           "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
         },
         {
-          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
-          "similarity_score": 0.326449,
-          "heading_context": "2. Mecanismos de Hipertrofia"
+          "chunk_id": "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.336671,
+          "heading_context": "1. Dominio y Alcance"
         },
         {
-          "chunk_id": "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
-          "similarity_score": 0.295932,
-          "heading_context": "2. Principios Biomecánicos Fundamentales"
+          "chunk_id": "medical_adaptations.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.250329,
+          "heading_context": "1. Dominio y Alcance"
         }
       ]
     },
@@ -124,28 +124,28 @@
       "mrr": 1.0,
       "retrieved_chunk_ids": [
         "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
-        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
-        "biomechanics_and_safety.md#1._dominio_y_alcance-0"
+        "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0"
       ],
-      "top_score": 0.365243,
+      "top_score": 0.417267,
       "safety_passed": true,
       "unwarned_contraindications": [],
       "missing_substitutes": [],
       "retrieved_chunks": [
         {
           "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
-          "similarity_score": 0.365243,
+          "similarity_score": 0.417267,
           "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
         },
         {
-          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
-          "similarity_score": 0.303506,
-          "heading_context": "2. Mecanismos de Hipertrofia"
+          "chunk_id": "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.339521,
+          "heading_context": "1. Dominio y Alcance"
         },
         {
-          "chunk_id": "biomechanics_and_safety.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.277063,
-          "heading_context": "1. Dominio y Alcance"
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.278584,
+          "heading_context": "2. Mecanismos de Hipertrofia"
         }
       ]
     },
@@ -159,27 +159,27 @@
       "mrr": 1.0,
       "retrieved_chunk_ids": [
         "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
-        "biomechanics_and_safety.md#1._dominio_y_alcance-0",
-        "medical_adaptations.md#1._dominio_y_alcance-0"
+        "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+        "biomechanics_and_safety.md#1._dominio_y_alcance-0"
       ],
-      "top_score": 0.400787,
+      "top_score": 0.367041,
       "safety_passed": true,
       "unwarned_contraindications": [],
       "missing_substitutes": [],
       "retrieved_chunks": [
         {
           "chunk_id": "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
-          "similarity_score": 0.400787,
+          "similarity_score": 0.367041,
           "heading_context": "2. Principios Biomecánicos Fundamentales"
         },
         {
-          "chunk_id": "biomechanics_and_safety.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.245559,
+          "chunk_id": "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.224035,
           "heading_context": "1. Dominio y Alcance"
         },
         {
-          "chunk_id": "medical_adaptations.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.232459,
+          "chunk_id": "biomechanics_and_safety.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.210354,
           "heading_context": "1. Dominio y Alcance"
         }
       ]
@@ -191,31 +191,31 @@
       "top_k": 3,
       "precision_at_k": 0.3333,
       "recall_at_k": 1.0,
-      "mrr": 0.5,
+      "mrr": 0.3333,
       "retrieved_chunk_ids": [
         "hypertrophy_periodization.md#1._dominio_y_alcance-0",
-        "biomechanics_and_safety.md#3._criterios_de_selección_de_información-0",
-        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0"
+        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+        "biomechanics_and_safety.md#3._criterios_de_selección_de_información-0"
       ],
-      "top_score": 0.332279,
+      "top_score": 0.329811,
       "safety_passed": true,
       "unwarned_contraindications": [],
       "missing_substitutes": [],
       "retrieved_chunks": [
         {
           "chunk_id": "hypertrophy_periodization.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.332279,
+          "similarity_score": 0.329811,
           "heading_context": "1. Dominio y Alcance"
         },
         {
-          "chunk_id": "biomechanics_and_safety.md#3._criterios_de_selección_de_información-0",
-          "similarity_score": 0.311914,
-          "heading_context": "3. Criterios de Selección de Información"
+          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+          "similarity_score": 0.300356,
+          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
         },
         {
-          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
-          "similarity_score": 0.285115,
-          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
+          "chunk_id": "biomechanics_and_safety.md#3._criterios_de_selección_de_información-0",
+          "similarity_score": 0.284832,
+          "heading_context": "3. Criterios de Selección de Información"
         }
       ]
     },
@@ -224,33 +224,33 @@
       "category": "Hypertrophy & Periodization",
       "query": "¿Cuáles son los mecanismos principales para la estimulación de hipertrofia muscular?",
       "top_k": 3,
-      "precision_at_k": 0.0,
-      "recall_at_k": 0.0,
-      "mrr": 0.0,
+      "precision_at_k": 0.3333,
+      "recall_at_k": 1.0,
+      "mrr": 0.3333,
       "retrieved_chunk_ids": [
+        "biomechanics_and_safety.md#1._dominio_y_alcance-0",
         "hypertrophy_periodization.md#1._dominio_y_alcance-0",
-        "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
-        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0"
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0"
       ],
-      "top_score": 0.357313,
+      "top_score": 0.314767,
       "safety_passed": true,
       "unwarned_contraindications": [],
       "missing_substitutes": [],
       "retrieved_chunks": [
         {
-          "chunk_id": "hypertrophy_periodization.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.357313,
+          "chunk_id": "biomechanics_and_safety.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.314767,
           "heading_context": "1. Dominio y Alcance"
         },
         {
-          "chunk_id": "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
-          "similarity_score": 0.317064,
-          "heading_context": "2. Principios Biomecánicos Fundamentales"
+          "chunk_id": "hypertrophy_periodization.md#1._dominio_y_alcance-0",
+          "similarity_score": 0.309354,
+          "heading_context": "1. Dominio y Alcance"
         },
         {
-          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
-          "similarity_score": 0.308276,
-          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.288017,
+          "heading_context": "2. Mecanismos de Hipertrofia"
         }
       ]
     },
@@ -261,31 +261,31 @@
       "top_k": 3,
       "precision_at_k": 0.3333,
       "recall_at_k": 1.0,
-      "mrr": 0.5,
+      "mrr": 1.0,
       "retrieved_chunk_ids": [
-        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
         "hypertrophy_periodization.md#3._periodización_por_objetivos-0",
-        "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0"
+        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+        "biomechanics_and_safety.md#3._criterios_de_selección_de_información-0"
       ],
-      "top_score": 0.499446,
+      "top_score": 0.488331,
       "safety_passed": true,
       "unwarned_contraindications": [],
       "missing_substitutes": [],
       "retrieved_chunks": [
         {
-          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
-          "similarity_score": 0.499446,
-          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
-        },
-        {
           "chunk_id": "hypertrophy_periodization.md#3._periodización_por_objetivos-0",
-          "similarity_score": 0.487065,
+          "similarity_score": 0.488331,
           "heading_context": "3. Periodización por Objetivos"
         },
         {
-          "chunk_id": "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
-          "similarity_score": 0.433115,
-          "heading_context": "2. Principios Biomecánicos Fundamentales"
+          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
+          "similarity_score": 0.421493,
+          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
+        },
+        {
+          "chunk_id": "biomechanics_and_safety.md#3._criterios_de_selección_de_información-0",
+          "similarity_score": 0.418428,
+          "heading_context": "3. Criterios de Selección de Información"
         }
       ]
     },
@@ -300,27 +300,27 @@
       "retrieved_chunk_ids": [
         "biomechanics_and_safety.md#1._dominio_y_alcance-0",
         "medical_adaptations.md#1._dominio_y_alcance-0",
-        "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0"
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0"
       ],
-      "top_score": 0.41346,
+      "top_score": 0.446625,
       "safety_passed": true,
       "unwarned_contraindications": [],
       "missing_substitutes": [],
       "retrieved_chunks": [
         {
           "chunk_id": "biomechanics_and_safety.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.41346,
+          "similarity_score": 0.446625,
           "heading_context": "1. Dominio y Alcance"
         },
         {
           "chunk_id": "medical_adaptations.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.381658,
+          "similarity_score": 0.386379,
           "heading_context": "1. Dominio y Alcance"
         },
         {
-          "chunk_id": "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0",
-          "similarity_score": 0.313517,
-          "heading_context": "2. Matriz de Sustitución por Lesión / Condición"
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.326017,
+          "heading_context": "2. Mecanismos de Hipertrofia"
         }
       ]
     },
@@ -335,27 +335,27 @@
       "retrieved_chunk_ids": [
         "hypertrophy_periodization.md#1._dominio_y_alcance-0",
         "medical_adaptations.md#1._dominio_y_alcance-0",
-        "biomechanics_and_safety.md#1._dominio_y_alcance-0"
+        "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0"
       ],
-      "top_score": 0.534567,
+      "top_score": 0.496318,
       "safety_passed": true,
       "unwarned_contraindications": [],
       "missing_substitutes": [],
       "retrieved_chunks": [
         {
           "chunk_id": "hypertrophy_periodization.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.534567,
+          "similarity_score": 0.496318,
           "heading_context": "1. Dominio y Alcance"
         },
         {
           "chunk_id": "medical_adaptations.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.514345,
+          "similarity_score": 0.455236,
           "heading_context": "1. Dominio y Alcance"
         },
         {
-          "chunk_id": "biomechanics_and_safety.md#1._dominio_y_alcance-0",
-          "similarity_score": 0.42034,
-          "heading_context": "1. Dominio y Alcance"
+          "chunk_id": "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0",
+          "similarity_score": 0.417449,
+          "heading_context": "2. Mecanismos de Hipertrofia"
         }
       ]
     }
