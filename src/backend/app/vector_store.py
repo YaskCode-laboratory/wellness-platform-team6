@@ -1,7 +1,7 @@
 """
 Módulo Vector Database Store — Wellness Lift (Issue #8 & Issue #18)
 Implementa el motor de base de datos vectorial in-memory con soporte nativo para
-embeddings densos de 384 dimensiones (S1-03 / EmbeddingsGenerator), búsqueda Top-K
+representaciones vectoriales densas de 384 dimensiones (S1-03 / EmbeddingsGenerator), búsqueda Top-K
 mediante Similitud del Coseno, persistencia JSON y mecanismo baseline TF-IDF.
 """
 
@@ -25,7 +25,7 @@ class VectorDatabaseStore:
     """
     Motor de almacenamiento e indexación vectorial para el sistema RAG de Wellness Lift.
     Indexa chunks de texto vinculados con sus representaciones vectoriales densas (384d)
-    y permite recuperación semántica de alta precisión por Similitud del Coseno.
+    y permite recuperación por similitud vectorial mediante Similitud del Coseno.
     """
 
     def __init__(

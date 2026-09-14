@@ -1,7 +1,7 @@
 """
 Pruebas Automatizadas de la Base de Datos Vectorial — Wellness Lift (Issue #8)
-Valida la integración con S1-03 (embeddings de 384 dimensiones), trazabilidad
-chunk_id -> embedding -> vector_store, recuperación semántica por similitud coseno,
+Valida la integración con S1-03 (representaciones vectoriales de 384 dimensiones), trazabilidad
+chunk_id -> embedding -> vector_store, recuperación por similitud coseno,
 persistencia JSON y soporte para baseline TF-IDF.
 """
 
@@ -42,7 +42,7 @@ class TestVectorDatabaseStore(unittest.TestCase):
         self.store.fit_and_index(self.sample_chunks)
 
     def test_indexing_dense_embeddings(self):
-        """Verifica que los documentos indexados contengan embeddings densos de 384 dimensiones."""
+        """Verifica que los documentos indexados contengan representaciones vectoriales densas de 384 dimensiones."""
         self.assertEqual(len(self.store.documents), 2)
         for doc in self.store.documents:
             self.assertIn("embedding", doc)
@@ -70,8 +70,41 @@ class TestVectorDatabaseStore(unittest.TestCase):
         self.assertEqual(test_store.documents[0]["embedding"], custom_emb)
         self.assertEqual(test_store.documents[0]["chunk_id"], "doc_s103#test")
 
+    def test_fallback_embeddings_json_structure_compatibility(self):
+        """Verifica que la estructura 'metadata -> vectors' de embeddings.json se adapte e indexe correctamente."""
+        embeddings_json_data = {
+            "metadata": {
+                "total_chunks": 1,
+                "embedding_model": "local-deterministic-hashing-384d",
+                "vector_dimension": 384
+            },
+            "vectors": [
+                {
+                    "chunk_id": "fallback#01",
+                    "source_file": "fallback.md",
+                    "heading_context": "Fallback",
+                    "text": "Texto en formato embeddings.json",
+                    "vector": [0.2] * 384
+                }
+            ]
+        }
+        meta = embeddings_json_data["metadata"]
+        converted_chunks = []
+        for item in embeddings_json_data["vectors"]:
+            c = dict(item)
+            c["embedding"] = item["vector"]
+            c["embedding_model"] = meta["embedding_model"]
+            c["embedding_dim"] = meta["vector_dimension"]
+            converted_chunks.append(c)
+
+        fallback_store = VectorDatabaseStore(collection_name="fallback_test")
+        fallback_store.fit_and_index(converted_chunks)
+        self.assertEqual(len(fallback_store.documents), 1)
+        self.assertEqual(fallback_store.documents[0]["chunk_id"], "fallback#01")
+        self.assertEqual(len(fallback_store.documents[0]["embedding"]), 384)
+
     def test_dense_similarity_search_retrieval(self):
-        """Verifica la recuperación semántica Top-1 usando similitud coseno sobre embeddings densos."""
+        """Verifica la recuperación por similitud vectorial Top-1 usando similitud coseno sobre representaciones densas."""
         results = self.store.search_similarity("hernia discal lumbar", k=1, mode="dense")
         self.assertEqual(len(results), 1)
         top_doc, score = results[0]
@@ -79,7 +112,7 @@ class TestVectorDatabaseStore(unittest.TestCase):
         self.assertGreater(score, 0.0)
 
     def test_dense_similarity_search_rodilla(self):
-        """Verifica la recuperación semántica por lesión de rodilla."""
+        """Verifica la recuperación por similitud vectorial en adaptación de rodilla."""
         results = self.store.search_similarity("menisco rodilla extension", k=1, mode="dense")
         self.assertEqual(len(results), 1)
         top_doc, score = results[0]
