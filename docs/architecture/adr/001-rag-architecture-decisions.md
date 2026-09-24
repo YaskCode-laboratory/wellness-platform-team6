@@ -13,12 +13,12 @@ El sistema RAG requiere convertir textos biomédicos y guías de entrenamiento e
 
 ### Decisión
 Adoptar una arquitectura de embeddings desacoplada en dos capas:
-1. **Generador Local Deterministico (`EmbeddingsGenerator`)**: Genera vectores de 384 dimensiones mediante hashing semántico (`zlib.adler32`) y normalización $L2$ sin necesidad de cuotas o llamadas a APIs externas. Se registra bajo la etiqueta de modelo `sentence-transformers/all-MiniLM-L6-v2` para mantener consistencia dimensional y de metadatos.
+1. **Generador Local Determinístico (`EmbeddingsGenerator`)**: Genera vectores de 384 dimensiones mediante hashing determinista basado en SHA-256 y normalización $L2$, identificado como `local-deterministic-hashing-384d`, sin necesidad de cuotas o llamadas a APIs externas.
 2. **Integrador Cloud Gemini (`models/text-embedding-004`)**: Genera vectores densos de 768 dimensiones cuando `GEMINI_API_KEY` está presente.
 
 ### Consecuencias
 - ✅ **Positivas**: Pruebas unitarias e integración en CI/CD instantáneas, deterministas y 100% reproducibles offline.
-- ⚠️ **Neutrales**: El generador local utiliza hashing determinista para simular la dimensionalidad de 384 dimensiones de MiniLM sin inferencia neuronal pesada.
+- ⚠️ **Neutrales**: El generador local utiliza la representación determinista de 384 dimensiones `local-deterministic-hashing-384d` para garantizar reproducibilidad exacta y cero costo de API en ejecuciones locales.
 
 ---
 

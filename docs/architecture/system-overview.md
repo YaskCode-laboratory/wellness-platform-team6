@@ -40,6 +40,6 @@
 
 ## 📚 Documentación de Arquitectura Relacionada
 
-- [**Arquitectura del Sistema RAG**](file:///C:/Users/Alejandro/.gemini/antigravity/scratch/wellness-platform-team6/docs/architecture/rag-architecture.md): Diagramas de flujo en Mermaid, especificación de componentes y métricas de evaluación.
-- [**Registro de Decisiones de Arquitectura (ADR)**](file:///C:/Users/Alejandro/.gemini/antigravity/scratch/wellness-platform-team6/docs/architecture/adr/001-rag-architecture-decisions.md): Decisiones técnicas formalizadas para el motor de embeddings, chunking semántico y métricas de similitud.
-- [**Métricas de Recuperación y Calidad**](file:///C:/Users/Alejandro/.gemini/antigravity/scratch/wellness-platform-team6/docs/evaluation/retrieval-metrics.md): Informe técnico de precisión, recall y seguridad médica.
+- [**Arquitectura del Sistema RAG**](./rag-architecture.md): Diagramas de flujo en Mermaid, especificación de componentes y métricas de evaluación.
+- [**Registro de Decisiones de Arquitectura (ADR)**](./adr/001-rag-architecture-decisions.md): Decisiones técnicas formalizadas para el motor de embeddings, chunking semántico y métricas de similitud.
+- [**Métricas de Recuperación y Calidad**](../evaluation/retrieval-metrics.md): Informe técnico de precisión, recall y seguridad médica.
