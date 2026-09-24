@@ -1,5 +1,5 @@
 """
-Módulo de Generación de Representaciones Vectoriales y Similitud Coseno — Wellness Lift (Issue #7 - S1-03).
+Módulo de Generación de Representaciones Vectoriales y Similitud Coseno — Wellness Lift (Issue #7 - S1-03 & Issue #10 - S1-06).
 Implementa un generador vectorial determinista basado en proyección espacial por hashing SHA-256 (384 dimensiones)
 con normalización L2, y soporte opcional para proveedores de embeddings en la nube (Google Gemini API).
 """
