@@ -117,7 +117,7 @@ class EmbeddingsGenerator:
         for chunk in chunks:
             text_to_embed = chunk.get("text", "")
             emb_data = self.generate_embedding(text_to_embed)
-            
+
             chunk_with_emb = dict(chunk)
             chunk_with_emb["embedding_model"] = emb_data["model"]
             chunk_with_emb["embedding_dim"] = emb_data["dimension"]
