@@ -1,7 +1,7 @@
 """
 Módulo Vector Database Store — Wellness Lift (Issue #8 & Issue #18)
 Implementa el motor de base de datos vectorial in-memory con soporte nativo para
-representaciones vectoriales densas de 384 dimensiones (S1-03 / EmbeddingsGenerator), búsqueda Top-K
+embeddings densos de 384 dimensiones (S1-03 / EmbeddingsGenerator), búsqueda Top-K
 mediante Similitud del Coseno, persistencia JSON y mecanismo baseline TF-IDF.
 """
 
@@ -25,7 +25,7 @@ class VectorDatabaseStore:
     """
     Motor de almacenamiento e indexación vectorial para el sistema RAG de Wellness Lift.
     Indexa chunks de texto vinculados con sus representaciones vectoriales densas (384d)
-    y permite recuperación por similitud vectorial mediante Similitud del Coseno.
+    y permite recuperación semántica de alta precisión por Similitud del Coseno.
     """
 
     def __init__(
@@ -148,6 +148,11 @@ class VectorDatabaseStore:
             else:
                 raise ValueError("Query debe ser una cadena de texto o una lista de floats")
 
+            if self.embedding_dim and len(query_emb) != self.embedding_dim:
+                raise ValueError(
+                    f"Incompatibilidad dimensional: el vector de consulta tiene dimensión {len(query_emb)}, "
+                    f"pero el índice vectorial espera dimensión {self.embedding_dim} (modelo: {self.embedding_model})."
+                )
             for doc in self.documents:
                 doc_emb = doc.get("embedding", [])
                 score = cosine_similarity(query_emb, doc_emb)
@@ -209,3 +214,12 @@ class VectorDatabaseStore:
         
         baseline = data.get("baseline_tfidf", {})
         self.idf = baseline.get("idf", data.get("idf", {}))
+        # Sincronizar generador de embeddings interno si el modelo/dimensión difieren
+        if (
+            self.embedding_generator.model_name != self.embedding_model
+            or self.embedding_generator.vector_dim != self.embedding_dim
+        ):
+            self.embedding_generator = EmbeddingsGenerator(
+                model_name=self.embedding_model,
+                vector_dim=self.embedding_dim
+            )
