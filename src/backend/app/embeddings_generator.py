@@ -1,5 +1,5 @@
 """
-Módulo de Generación de Representaciones Vectoriales y Similitud Coseno — Wellness Lift (Issue #7 - S1-03).
+Módulo de Generación de Representaciones Vectoriales y Similitud Coseno — Wellness Lift (Issue #7 - S1-03 & Issue #10 - S1-06).
 Implementa un generador vectorial determinista basado en proyección espacial por hashing SHA-256 (384 dimensiones)
 con normalización L2, y soporte opcional para proveedores de embeddings en la nube (Google Gemini API).
 """
@@ -16,14 +16,21 @@ class EmbeddingsGenerator:
     Generador de representaciones vectoriales (embeddings) para el motor RAG de Wellness Lift.
     """
 
-    def __init__(self, model_name: str = "local-deterministic-hashing-384d", vector_dim: int = 384):
+    def __init__(
+        self,
+        model_name: str = "local-deterministic-hashing-384d",
+        vector_dim: int = 384,
+        api_key: Optional[str] = None
+    ):
         """
         Inicializa el generador de representaciones vectoriales.
         :param model_name: Identificador formal del modelo/mecanismo ('local-deterministic-hashing-384d' o 'models/text-embedding-004').
         :param vector_dim: Dimensionalidad del espacio vectorial (384 dimensiones estándar para la representación local).
+        :param api_key: Clave opcional de API específica para el proveedor de embeddings en la nube.
         """
         self.model_name = model_name
         self.vector_dim = vector_dim
+        self.api_key = api_key
 
     def _clean_text(self, text: str) -> str:
         """Limpia el texto removiendo caracteres especiales y convirtiendo a minúsculas."""
@@ -79,14 +86,15 @@ class EmbeddingsGenerator:
     def generate_embedding(self, text: str, api_key: Optional[str] = None) -> Dict[str, Union[str, int, List[float]]]:
         """
         Genera el embedding para un fragmento de texto individual.
-        Si se provee api_key o existe GEMINI_API_KEY en el entorno, intenta utilizar text-embedding-004.
-        De lo contrario, utiliza el mecanismo local determinista de 384 dimensiones.
+        Si model_name está explícitamente configurado como 'models/text-embedding-004' y se provee api_key
+        (o se pasa en el constructor), utiliza la API de Google Gemini.
+        De lo contrario, utiliza de forma determinista el mecanismo local de 384 dimensiones.
         """
-        if api_key or os.getenv("GEMINI_API_KEY"):
+        effective_key = api_key or self.api_key
+        if self.model_name == "models/text-embedding-004" and effective_key:
             try:
                 import google.generativeai as genai
-                key = api_key or os.getenv("GEMINI_API_KEY")
-                genai.configure(api_key=key)
+                genai.configure(api_key=effective_key)
                 result = genai.embed_content(
                     model="models/text-embedding-004",
                     content=text,
@@ -100,7 +108,7 @@ class EmbeddingsGenerator:
                         "vector": [round(x, 6) for x in embedding_vector]
                     }
             except Exception:
-                pass  # Fallback automático a mecanismo local determinista
+                pass  # Fallback a mecanismo local determinista si la API no responde
 
         vector = self._generate_local_embedding(text)
         return {
