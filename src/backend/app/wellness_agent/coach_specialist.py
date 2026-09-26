@@ -6,6 +6,7 @@ Integra Motor RAG, Memoria Conversacional de Doble Nivel, Tool Calling y Delimit
 
 import json
 import logging
+from pathlib import Path
 from typing import Dict, Any, Optional
 
 from app import database
@@ -15,6 +16,27 @@ from app.wellness_agent.reasoning import ReasoningEngine
 from app.wellness_agent.tools import AgentToolRegistry
 
 logger = logging.getLogger(__name__)
+
+# Ruta al System Prompt oficial (Única Fuente de Verdad)
+SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent.parent.parent.parent / "prompts" / "system_prompt_wellness_coach_2.0.txt"
+
+
+def load_system_prompt() -> str:
+    """Carga el System Prompt especializado desde el archivo oficial prompts/system_prompt_wellness_coach_2.0.txt."""
+    if SYSTEM_PROMPT_PATH.exists():
+        try:
+            with open(SYSTEM_PROMPT_PATH, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if content:
+                    return content
+        except Exception as e:
+            logger.warning(f"Error al leer system prompt desde {SYSTEM_PROMPT_PATH}: {e}")
+    return (
+        "Eres Wellness Coach AI 2.0, un entrenador personal deportivo de élite y especialista en fisioterapia biomecánica.\n"
+        "Actúa de manera profesional, empática, concisa y basada en evidencia científica deportiva.\n"
+        "Prioriza en todo momento la salud articular y la prevención de lesiones del atleta.\n"
+        "Sé conciso y no utilices ningún tipo de emoji."
+    )
 
 
 class WellnessCoachSpecialist:
@@ -34,57 +56,101 @@ class WellnessCoachSpecialist:
         self.tools = tool_registry or AgentToolRegistry()
         self.reasoning = reasoning_engine or ReasoningEngine(tool_registry=self.tools)
         self.llm = llm_provider or LLMProviderManager()
+        self.system_prompt = load_system_prompt()
 
     def is_query_in_domain(self, query: str) -> bool:
         """
-        Verifica si la consulta pertenece al dominio del agente especializado (Biomecánica & Entrenamiento).
+        Verifica si la consulta pertenece explícitamente al dominio del agente especializado (Biomecánica & Entrenamiento).
+        Rechaza consultas fuera de dominio (nutrición pura, recetas, finanzas, informática, medicina general, etc.).
         """
-        q_lower = query.lower()
-        # Términos que identifican el dominio del coach
+        if not query or not query.strip():
+            return False
+
+        q_lower = query.lower().strip()
+
+        # Términos que identifican explícitamente el dominio del coach especializado
         coach_keywords = [
             "rutina", "ejercicio", "entrenamiento", "sentadilla", "press", "banca", "peso muerto",
-            "lesión", "dolor", "espalda", "hernia", "rodilla", "hombro", "reemplaz", "alternativa",
-            "músculo", "pecho", "espalda", "piernas", "biceps", "triceps", "hipertrofia", "fuerza",
-            "serie", "repetición", "rpe", "rir", "descanso", "calentamiento", "postura", "técnica"
+            "lesión", "lesion", "dolor", "espalda", "hernia", "rodilla", "hombro", "reemplaz", "alternativa",
+            "sustituto", "músculo", "musculo", "pecho", "espalda", "pierna", "piernas", "biceps", "triceps",
+            "hipertrofia", "fuerza", "serie", "repetición", "repeticion", "rpe", "rir", "descanso",
+            "calentamiento", "postura", "técnica", "tecnica", "cuádriceps", "cuadriceps", "femorales",
+            "glúteos", "gluteos", "pantorrilla", "cardio", "mancuerna", "mancuernas", "barra", "polea",
+            "gimnasio", "gym", "fisioterapia", "biomecánica", "biomecanica", "movilidad", "calistenia"
         ]
 
-        # Términos ajenos
-        out_keywords = ["receta de cocina", "menú semanal", "dieta keto", "receta vegetal", "terapia psicología", "depresión clínica"]
+        # Términos explícitamente ajenos al dominio del entrenador
+        out_keywords = [
+            "receta", "menú", "menu", "dieta", "keto", "calorías", "calorias", "macro", "proteína para comer",
+            "psicología", "psicologia", "depresión", "depresion", "ansiedad", "receta vegetal", "cocina",
+            "programación", "programacion", "python", "javascript", "código", "codigo", "capital", "precio",
+            "dólar", "dolar", "política", "politica", "clima", "tiempo libre", "película", "pelicula"
+        ]
 
-        has_coach_kw = any(kw in q_lower for kw in coach_keywords)
         has_out_kw = any(kw in q_lower for kw in out_keywords)
+        has_coach_kw = any(kw in q_lower for kw in coach_keywords)
 
-        if has_out_kw and not has_coach_kw:
+        if has_out_kw:
             return False
-        return True
+
+        return has_coach_kw
 
     def process_specialized_request(self, user_id: str, message: str) -> Dict[str, Any]:
         """
-        Procesa una solicitud especializada validando la frontera de dominio.
+        Procesa una solicitud especializada validando la frontera de dominio,
+        extrayendo la estructura real del perfil del usuario (fitness_profile y health_conditions),
+        consultando la base RAG y herramientas de evaluación de riesgo.
         """
-        # Cargar perfil de usuario para extraer lesiones y nivel
+        # Cargar perfil de usuario usando la estructura real (fitness_profile)
         profile = database.get_user_profile(user_id)
-        name = profile.get("personal_info", {}).get("name", "Atleta")
-        health_conds = profile.get("health_conditions", [])
+        personal_info = profile.get("personal_info", {})
+        name = personal_info.get("name", "Atleta")
+
+        fitness_profile = profile.get("fitness_profile", {})
+        health_conds = fitness_profile.get("health_conditions", [])
+        if not health_conds and "health_conditions" in profile:
+            health_conds = profile.get("health_conditions", [])
+
+        goal = fitness_profile.get("goal", "entrenamiento")
+        level = fitness_profile.get("level", "intermedio")
+        limitations = fitness_profile.get("limitations", "Sin limitaciones registradas")
 
         # Verificar frontera de dominio
         if not self.is_query_in_domain(message):
             logger.info(f"Wellness Coach Specialist: Consulta de usuario '{user_id}' está fuera de dominio directo.")
-            redirect_msg = (
-                f"Hola {name}, como especialista en Biomecánica y Entrenamiento Adaptativo de Wellness Lift, "
-                f"mi enfoque principal son los ejercicios, técnicas y adaptaciones de seguridad. "
-                f"Para recomendaciones detalladas de cocina o dieta, he notificado al Nutrition Agent. "
-                f"En cuanto a tu entrenamiento, recuerda mantener buena postura y técnica."
+            out_of_domain_msg = (
+                f"Hola {name}, la consulta sobre '{message}' está fuera del dominio de Biomecánica y Entrenamiento Adaptativo de Wellness Coach 2.0. "
+                f"Esta solicitud requiere la intervención de un agente especializado en dicho dominio."
             )
             self.memory.add_message(user_id, "user", message)
-            self.memory.add_message(user_id, "assistant", redirect_msg)
+            self.memory.add_message(user_id, "assistant", out_of_domain_msg)
             return {
                 "user_id": user_id,
                 "agent_name": "WellnessCoachAgent2.0",
                 "in_domain": False,
-                "status": "out_of_domain_redirect",
-                "response": redirect_msg,
+                "status": "out_of_domain",
+                "response": out_of_domain_msg,
             }
+
+        # Ejecución e integración RAG & Tool Calling
+        rag_context = ""
+        try:
+            rag_chunks = self.tools.retrieve_rag_knowledge(message, top_k=2)
+            if rag_chunks:
+                rag_context = "\n".join(
+                    [f"- Fragmento [{c.get('chunk_id', 'RAG')}]: {c.get('content', '')}" for c in rag_chunks]
+                )
+        except Exception as e:
+            logger.warning(f"Coach Specialist: No se pudo consultar RAG context: {e}")
+
+        injury_assessment = ""
+        if health_conds or limitations != "Sin limitaciones registradas":
+            try:
+                risk = self.tools.assess_injury_risk(user_id, message)
+                if risk and risk.get("risk_level") == "HIGH":
+                    injury_assessment = f"ADVERTENCIA DE SEGURIDAD: {risk.get('warning')} Recomendación segura: {risk.get('safe_recommendation')}"
+            except Exception as e:
+                logger.warning(f"Error evaluando riesgo de lesión en coach_specialist: {e}")
 
         # Registrar mensaje de entrada en la memoria conversacional
         self.memory.add_message(user_id, "user", message)
@@ -92,24 +158,38 @@ class WellnessCoachSpecialist:
 
         history_text = self.memory.get_formatted_history(user_id)
         facts_text = "\n".join(extracted_facts) if extracted_facts else "Sin hechos adicionales extraídos."
+        health_text = ", ".join(health_conds) if health_conds else "Sin condiciones médicas registradas."
 
+        # Construcción del prompt usando el System Prompt oficial como Única Fuente de Verdad
         prompt = f"""
-        Eres Wellness Coach Agent 2.0, el agente especializado del Equipo 6 en Biomecánica y Entrenamiento Adaptativo.
-        Hablas con {name}.
-        
-        HISTORIAL DE CONVERSACIÓN (MEMORIA A CORTO PLAZO):
-        {history_text}
-        
-        HECHOS Y OBSERVACIONES EXTRAÍDAS (MEMORIA A LARGO PLAZO):
-        {facts_text}
-        
-        MENSAJE ACTUAL DEL USUARIO:
-        "{message}"
-        
-        Responde de manera natural, motivadora y basándote en ciencia del deporte.
-        Si te piden alternativas de ejercicios, mantén el mismo grupo muscular y respeta las lesiones.
-        Sé conciso. No utilices emojis.
-        """
+{self.system_prompt}
+
+INFORMACIÓN Y PERFIL DEL ATLETA:
+- Nombre: {name}
+- Nivel de experiencia: {level}
+- Objetivo principal: {goal}
+- Condiciones de salud / Lesiones: {health_text}
+- Limitaciones reportadas: {limitations}
+
+CONTEXTO DE CONOCIMIENTO RAG RECUPERADO (BIOMECÁNICA Y SEGURIDAD):
+{rag_context if rag_context else "No se recuperaron fragmentos RAG específicos para esta consulta."}
+
+EVALUACIÓN DE RIESGO BIOMECÁNICO (HERRAMIENTAS):
+{injury_assessment if injury_assessment else "Sin alertas de riesgo crítico detectadas."}
+
+HISTORIAL DE CONVERSACIÓN (MEMORIA A CORTO PLAZO):
+{history_text}
+
+HECHOS Y OBSERVACIONES EXTRAÍDAS (MEMORIA A LARGO PLAZO):
+{facts_text}
+
+MENSAJE ACTUAL DEL USUARIO:
+"{message}"
+
+Responde de manera natural, motivadora y basándote en la evidencia RAG y el perfil del atleta.
+Si te piden alternativas de ejercicios, mantén el mismo grupo muscular y respeta estrictamente las lesiones.
+Sé conciso. No utilices ningún tipo de emoji.
+"""
 
         completion = self.llm.generate_completion(prompt, is_json=False)
         if completion:
@@ -124,6 +204,7 @@ class WellnessCoachSpecialist:
             "agent_name": "WellnessCoachAgent2.0",
             "in_domain": True,
             "status": "success",
+            "fitness_profile": fitness_profile,
             "health_conditions": health_conds,
             "response": response_text,
         }
