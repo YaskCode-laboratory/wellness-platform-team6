@@ -1,0 +1,111 @@
+{
+  "benchmark_description": "Comparación empírica reproducible de estrategias de chunking en Wellness Lift (Issue #6)",
+  "unit_of_measure": "words (palabras) con estimación de tokens",
+  "configurations": {
+    "Config_A_256_32": {
+      "name": "Opción A (Pequeña: 256/32)",
+      "chunk_size_words": 256,
+      "chunk_overlap_words": 32,
+      "real_corpus_metrics": {
+        "total_chunks": 8,
+        "avg_words_per_chunk": 57.0,
+        "avg_estimated_tokens_per_chunk": 76.9,
+        "min_words": 23,
+        "max_words": 185
+      },
+      "controlled_long_doc_metrics": {
+        "total_subchunks_generated": 6,
+        "sliding_window_activated": true,
+        "overlap_validations": [
+          {
+            "transition": "Chunk 1 -> Chunk 2",
+            "expected_overlap_words": 32,
+            "actual_overlap_words": 32,
+            "exact_match": true
+          },
+          {
+            "transition": "Chunk 2 -> Chunk 3",
+            "expected_overlap_words": 32,
+            "actual_overlap_words": 32,
+            "exact_match": true
+          },
+          {
+            "transition": "Chunk 3 -> Chunk 4",
+            "expected_overlap_words": 32,
+            "actual_overlap_words": 32,
+            "exact_match": true
+          },
+          {
+            "transition": "Chunk 4 -> Chunk 5",
+            "expected_overlap_words": 32,
+            "actual_overlap_words": 32,
+            "exact_match": true
+          },
+          {
+            "transition": "Chunk 5 -> Chunk 6",
+            "expected_overlap_words": 32,
+            "actual_overlap_words": 32,
+            "exact_match": true
+          }
+        ],
+        "all_overlaps_verified": true
+      }
+    },
+    "Config_B_512_64": {
+      "name": "Opción B (Óptima Seleccionada: 512/64)",
+      "chunk_size_words": 512,
+      "chunk_overlap_words": 64,
+      "real_corpus_metrics": {
+        "total_chunks": 8,
+        "avg_words_per_chunk": 57.0,
+        "avg_estimated_tokens_per_chunk": 76.9,
+        "min_words": 23,
+        "max_words": 185
+      },
+      "controlled_long_doc_metrics": {
+        "total_subchunks_generated": 3,
+        "sliding_window_activated": true,
+        "overlap_validations": [
+          {
+            "transition": "Chunk 1 -> Chunk 2",
+            "expected_overlap_words": 64,
+            "actual_overlap_words": 64,
+            "exact_match": true
+          },
+          {
+            "transition": "Chunk 2 -> Chunk 3",
+            "expected_overlap_words": 64,
+            "actual_overlap_words": 64,
+            "exact_match": true
+          }
+        ],
+        "all_overlaps_verified": true
+      }
+    },
+    "Config_C_1024_128": {
+      "name": "Opción C (Grande: 1024/128)",
+      "chunk_size_words": 1024,
+      "chunk_overlap_words": 128,
+      "real_corpus_metrics": {
+        "total_chunks": 8,
+        "avg_words_per_chunk": 57.0,
+        "avg_estimated_tokens_per_chunk": 76.9,
+        "min_words": 23,
+        "max_words": 185
+      },
+      "controlled_long_doc_metrics": {
+        "total_subchunks_generated": 2,
+        "sliding_window_activated": true,
+        "overlap_validations": [
+          {
+            "transition": "Chunk 1 -> Chunk 2",
+            "expected_overlap_words": 128,
+            "actual_overlap_words": 128,
+            "exact_match": true
+          }
+        ],
+        "all_overlaps_verified": true
+      }
+    }
+  }
+}
