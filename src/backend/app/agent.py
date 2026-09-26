@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 use_real_ai = True
 
+# Instancias del paquete modular wellness_agent
 provider_manager = LLMProviderManager()
 memory_manager = ConversationMemoryManager()
 tool_registry = AgentToolRegistry()
