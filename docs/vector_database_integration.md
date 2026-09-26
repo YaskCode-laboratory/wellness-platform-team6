@@ -1,51 +1,72 @@
-# 🗄️ Integración de Base de Datos Vectorial — Wellness Lift (Issue #8 & Issue #18)
+# 🗄️ Integración de Base de Datos Vectorial — Wellness Lift (Issue #8)
 
 ## 1. Resumen Ejecutivo
-Este documento especifica la selección, configuración, indexación y pruebas de recuperación semántica de la **Base de Datos Vectorial** implementada para el motor RAG de la plataforma **Wellness Lift**, respondiendo al requerimiento **[S1-04 - Integrar base de datos vectorial] (Issue #8)**.
+Este documento especifica la integración, indexación, persistencia y recuperación por similitud vectorial de la **Base de Datos Vectorial** implementada para el motor RAG de la plataforma **Wellness Lift**, en cumplimiento directo del requerimiento **[S1-04 - Integrar base de datos vectorial] (Issue #8)** y su integración con las representaciones vectoriales generadas en **[S1-03 - Generación de embeddings] (Issue #7)**.
 
 ---
 
-## 2. Selección de la Tecnología de Base de Datos Vectorial
+## 2. Selección de la Tecnología y Arquitectura Vectorial
 
-Se seleccionó e implementó un motor vectorial **In-Memory Cosine Vector Database Store** desarrollado en Python (`src/backend/app/vector_store.py`):
-- **Motor de Similitud**: Similitud del Coseno (*Cosine Similarity*) ponderada por TF-IDF normalizado L2.
-- **Indexación y Persistencia**: Serialización en formato JSON (`data/vector_store/vector_index.json`).
-- **Justificación**: Aporta cero latencia de red, 100% de reproducibilidad local y en AWS EC2 sin depender de servicios externos o contenedores pesados adicionales, garantizando búsquedas vectoriales sub-milisegundo.
+Se implementó el motor vectorial **In-Memory Dense Cosine Vector Database Store** (`src/backend/app/vector_store.py`):
+- **Representación Vectorial Principal**: Vectores densos de **384 dimensiones** generados por `EmbeddingsGenerator` (`local-deterministic-hashing-384d` con SHA-256 y normalización $L_2$, o Gemini `text-embedding-004`).
+- **Motor de Búsqueda Vectorial**: Similitud del Coseno (*Cosine Similarity*) sobre las representaciones vectoriales de 384d:
+  $$\text{sim}(\mathbf{q}, \mathbf{d}) = \frac{\mathbf{q} \cdot \mathbf{d}}{\|\mathbf{q}\|_2 \|\mathbf{d}\|_2}$$
+- **Mecanismo Baseline / Respaldo**: Soporte alternativo para vectores ralos TF-IDF normalizados $L_2$, disponible mediante el parámetro `mode="tfidf"`, utilizado con propósitos comparativos y de auditoría.
+- **Indexación y Persistencia**: Serialización determinista en formato JSON estructurado (`data/vector_store/vector_index.json`).
+- **Soporte de Ingesta Dual S1-03**: Carga nativa desde `data/processed_chunks/rag_chunks_with_embeddings.json` y fallback compatible con la estructura `metadata -> vectors` de `data/vector_store/embeddings.json`.
+- **Trazabilidad Integral**: Conserva la relación directa:
+  $$\text{chunk\_id} \longrightarrow \text{embedding (384d)} \longrightarrow \text{vector\_store (índice)}$$
 
 ---
 
-## 3. Arquitectura del Flujo de Indexación y Consulta
+## 3. Diagrama de Flujo del Pipeline RAG Integrado
 
 ```
-[Documentos RAG (.md)] ──> [RAG Chunker (512 tokens)] ──> [Vector Database Store]
-                                                                  │
-[Consulta Atleta/Coach] ──> [Vectorizador Similitud] ─────────────┴──> [Top-K Chunks Relevantes]
+[Documentos RAG (.md)] (S1-01)
+         │
+         ▼
+[Chunking Híbrido Markdown] (S1-02) ──> data/processed_chunks/rag_chunks.json
+         │
+         ▼
+[EmbeddingsGenerator (384d)] (S1-03) ──> data/processed_chunks/rag_chunks_with_embeddings.json
+         │                                (o data/vector_store/embeddings.json)
+         ▼
+[VectorDatabaseStore] (S1-04) ───────> data/vector_store/vector_index.json
+         │
+         ├─────────────────────────────────────────┐
+         │ (Modo Principal: Dense 384d)             │ (Modo Baseline: TF-IDF)
+         ▼                                         ▼
+[Consulta Atleta] ──> [Query Vector (384d)] ────> [Similitud Coseno] ──> [Top-K Chunks Relevantes]
 ```
 
 ---
 
-## 4. Pruebas de Recuperación Semántica por Similitud
+## 4. Pruebas de Recuperación por Similitud Vectorial
 
-Se ejecutaron consultas de prueba en `scripts/index_vector_store.py`:
+Se ejecutaron consultas de prueba en `scripts/index_vector_store.py` sobre los 8 chunks del corpus científico:
 
-1. **Consulta**: *"¿Qué ejercicios debo reemplazar si tengo hernia discal lumbar L4-L5?"*
-   - **Resultado**: `medical_adaptations.md` (Similitud: `0.1519`)
-   - **Chunk Recuperado**: *Matriz de Sustitución por Lesión Lumbar* (Reemplazar sentadilla libre por prensa inclinada).
-
-2. **Consulta**: *"¿Cómo se aplica el principio de sobrecarga progresiva e hipertrofia?"*
-   - **Resultado**: `hypertrophy_periodization.md` (Similitud: `0.2390`)
-   - **Chunk Recuperado**: *Mecanismos de Hipertrofia y Tensión Mecánica*.
-
-3. **Consulta**: *"Alineación articular y prevención de valgo de rodilla en sentadilla"*
-   - **Resultado**: `biomechanics_and_safety.md` (Similitud: `0.2926`)
-   - **Chunk Recuperado**: *Principios Biomecánicos Fundamentales*.
+| # | Consulta | Chunk Top-1 Recuperado | Similitud Coseno (384d) | Baseline TF-IDF |
+|---|----------|------------------------|-------------------------|-----------------|
+| 1 | *"¿Qué ejercicios debo reemplazar si tengo hernia discal lumbar L4-L5?"* | `medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0` | **0.2252** | 0.1519 |
+| 2 | *"¿Cómo se aplica el principio de sobrecarga progresiva e hipertrofia?"* | `hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0` | **0.3398** | 0.1245 |
+| 3 | *"Alineación articular y prevención de valgo de rodilla en sentadilla"* | `biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0` | **0.5137** | 0.2926 |
 
 ---
 
 ## 5. Verificación Automatizada
 
-La suite de pruebas unitarias en `tests/test_vector_store.py` valida la fidelidad de la recuperación vectorial:
+La suite de pruebas unitarias en `tests/test_vector_store.py` valida:
+1. `test_indexing_dense_embeddings`: Integración dimensional y metadatos de vectores de 384d.
+2. `test_direct_s103_embeddings_preservation`: Preservación exacta de representaciones precalculadas en S1-03 sin recalcular.
+3. `test_fallback_embeddings_json_structure_compatibility`: Compatibilidad de ingesta con la estructura `metadata -> vectors` de `embeddings.json`.
+4. `test_dense_similarity_search_retrieval`: Recuperación Top-1 por similitud coseno sobre representaciones vectoriales densas.
+5. `test_dense_similarity_search_rodilla`: Recuperación de adaptaciones articulares de rodilla.
+6. `test_vector_query_search`: Búsqueda directa pasando vectores numéricos `List[float]`.
+7. `test_baseline_tfidf_search`: Operación correcta del motor baseline TF-IDF.
+8. `test_save_and_load_index`: Serialización y deserialización sin pérdida de precisión.
+9. `test_persisted_vector_index_integrity`: Integridad estructural de `data/vector_store/vector_index.json`.
+
 ```bash
 python -m unittest tests/test_vector_store.py
-# Ran 3 tests in 0.001s - OK
+# Ran 9 tests in 0.040s - OK
 ```

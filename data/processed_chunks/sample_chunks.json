@@ -3,6 +3,7 @@
     "chunk_id": "biomechanics_and_safety.md#1._dominio_y_alcance-0",
     "source_file": "biomechanics_and_safety.md",
     "heading_context": "1. Dominio y Alcance",
+    "word_count": 33,
     "token_count": 43,
     "text": "### Contexto: 1. Dominio y Alcance\nEste documento constituye la base del conocimiento biomecánico utilizado por el motor RAG de **Wellness Lift** para validar la ejecución de ejercicios de alta demanda articular (ej. sentadilla, peso muerto, press de banca)."
   },
@@ -10,6 +11,7 @@
     "chunk_id": "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0",
     "source_file": "biomechanics_and_safety.md",
     "heading_context": "2. Principios Biomecánicos Fundamentales",
+    "word_count": 69,
     "token_count": 91,
     "text": "### Contexto: 2. Principios Biomecánicos Fundamentales\n- **Alineación Articular y Vector de Carga**: Mantenimiento de las curvaturas fisiológicas de la columna vertebral (lordosis lumbar neutra) durante la fase excéntrica y concéntrica.\n- **Rango de Movimiento (ROM) Efectivo**: Priorizar el ROM completo sobre la carga absoluta para maximizar la tensión mecánica sin comprometer la cápsula articular.\n- **Valgo de Rodilla No Controlado**: Identificación y corrección de colapso en valgo durante la fase de ascenso en sentadillas."
   },
@@ -17,6 +19,7 @@
     "chunk_id": "biomechanics_and_safety.md#3._criterios_de_selección_de_información-0",
     "source_file": "biomechanics_and_safety.md",
     "heading_context": "3. Criterios de Selección de Información",
+    "word_count": 25,
     "token_count": 34,
     "text": "### Contexto: 3. Criterios de Selección de Información\nLas evidencias científicas se seleccionaron a partir de estándares internacionales de la *National Strength and Conditioning Association (NSCA)* y la *International Society of Biomechanics (ISB)*."
   }

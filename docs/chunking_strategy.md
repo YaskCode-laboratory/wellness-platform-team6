@@ -1,53 +1,80 @@
-# 📐 Estrategia e Implementación de Chunking para el Sistema RAG — Wellness Lift (Issue #6 & Issue #18)
+# 📐 Estrategia e Implementación de Chunking para el Sistema RAG — Wellness Lift (Issue #6)
 
 ## 1. Resumen Ejecutivo
-Este documento describe el diseño, la justificación de parámetros y la implementación de la estrategia de segmentación (**Chunking Strategy**) utilizada para procesar la base de conocimiento especializada del dominio deportivo y biomecánico en **Wellness Lift**, respondiendo al requerimiento **[S1-02 - Implementar estrategia de chunking] (Issue #6)**.
+Este documento describe el diseño, la justificación de parámetros, la unidad de medida y la validación empírica de la estrategia de segmentación (**Chunking Strategy**) utilizada para procesar la base de conocimiento especializada del dominio deportivo y biomecánico en **Wellness Lift**, respondiendo a la tarea **[S1-02 - Implementar estrategia de chunking] (Issue #6)**.
 
 ---
 
-## 2. Análisis de Estructura y Características de los Documentos
-Los documentos del dominio (`docs/rag_knowledge_base/*.md`) presentan una estructura semántica jerárquica:
-- Encabezados Markdown de nivel 1 (`#`), 2 (`##`) y 3 (`###`).
-- Tablas comparativas de sustitución muscular y contraindicaciones médicas.
-- Listas con viñetas de reglas biomecánicas y rangos de repeticiones.
+## 2. Definición y Alineación de Unidades de Medida
+
+Para garantizar total transparencia y concordancia entre el código (src/backend/app/rag_chunker.py) y la documentación técnica:
+
+- **Unidad Primaria de Segmentación:** **Palabras (words)**. La ventana deslizante opera dividiendo el contenido mediante content.split(), garantizando que ninguna palabra quede truncada ortográficamente.
+- **Estimación de Tokens (_estimate_tokens):** Se computa mediante expresiones regulares (len(re.findall(r'\w+|\S', text))), proporcionando una estimación proporcional donde 1 palabra equivale aproximadamente a **1.3 – 1.4 tokens**.
+- **Parámetros Nominales de la Configuración Seleccionada:**
+  - chunk_size = 512 palabras (~650 – 700 tokens estimados).
+  - chunk_overlap = 64 palabras (~80 – 90 tokens estimados, equivalente al **12.5%** de solapamiento).
 
 ---
 
-## 3. Estrategia de Segmentación Seleccionada: Híbrida Semántica-Markdown con Ventana Deslizante
+## 3. Estrategia de Segmentación Híbrida: Jerárquica + Ventana Deslizante
 
-Se seleccionó un enfoque **Híbrido Semántico-Markdown con Ventana Deslizante (Sliding Window Overlap)**:
-1. **Fase 1 (Segmentación Jerárquica por Encabezados)**: Preserva la unidad temática del concepto (ej. *Hernia Discal L4-L5*).
-2. **Fase 2 (Ventana Deslizante con Solapamiento)**: Para secciones extensas que superan el tamaño máximo de ventana, se aplica una división con solapamiento (*overlap*) para evitar la fragmentación abrupta de frases al final de cada bloque.
+La estrategia implementada consta de dos etapas complementarias:
 
----
+1. **Fase 1 — Segmentación Jerárquica por Encabezados Markdown (split_markdown_by_headings):**
+   - El documento se divide en secciones basadas en encabezados (#, ##, ###).
+   - Cada sección preserva su contexto temático inyectando el metadato heading_context en el cuerpo del chunk.
+   - Si la sección tiene $\le 512$ palabras, se genera un chunk atómico sin necesidad de fragmentación.
 
-## 4. Justificación y Matriz de Pruebas de Parámetros
-
-Se realizaron pruebas empíricas evaluando 3 configuraciones de segmentación:
-
-| Configuración | Tamaños Probados (`chunk_size` / `overlap`) | Coherencia Semántica | Fragmentación de Tablas | Configuración Seleccionada |
-| :--- | :--- | :--- | :--- | :--- |
-| **Opción A (Pequeña)** | 256 tokens / 32 overlap | Deficiente (Frases cortadas) | Alta (Tablas divididas por la mitad) | No |
-| **Opción B (Óptima)** | **512 tokens / 64 overlap** | **Excelente (Contexto completo)** | **Nula (Mantiene tablas intactas)** | **SI (SELECCIONADA)** |
-| **Opción C (Grande)** | 1024 tokens / 128 overlap | Excesivo ruido impreciso | Nula | No |
-
-### Justificación de Parámetros Seleccionados:
-- **`chunk_size = 512` tokens (~350-400 palabras)**: Coincide exactamente con la ventana de contexto óptima para modelos de embeddings modernos (ej. OpenAI `text-embedding-3-small`, Google `text-embedding-004`).
-- **`chunk_overlap = 64` tokens (~12.5% del tamaño del chunk)**: Garantiza que los conceptos fronterizos entre dos bloques adyacentes conserven la ilación lógica sin duplicar excesivamente el índice vectorial.
+2. **Fase 2 — Ventana Deslizante con Solapamiento (chunk_section):**
+   - Si una sección supera el umbral de chunk_size (512 palabras), se activa el algoritmo de ventana deslizante:
+     	ext{Inicio}_{i+1} = 	ext{Inicio}_i + (	ext{chunk\_size} - 	ext{chunk\_overlap})
+   - Los chunks consecutivos retienen exactamente chunk_overlap (64 palabras) en común, garantizando continuidad semántica entre transiciones.
 
 ---
 
-## 5. Implementación en Código (`src/backend/app/rag_chunker.py`)
+## 4. Comparación Empírica Reproducible de Configuraciones
 
-El módulo `MarkdownSemanticChunker` procesa los archivos `.md`, extrae el contexto del encabezado superior e inyecta el metadato `heading_context` en el cuerpo del chunk.
+Para verificar cuantitativamente el impacto de los hiperparámetros de segmentación, se ejecutó el script de benchmark reproducible [scripts/benchmark_chunking_configs.py](../../scripts/benchmark_chunking_configs.py) sobre el corpus real de la base de conocimiento y sobre un documento de prueba controlado de 1,200 palabras.
 
-```python
-# Ejemplo de chunk generado en data/processed_chunks/sample_chunks.json
-{
-  "chunk_id": "medical_adaptations.md#matriz_de_sustitución_por_lesión_/_condición-0",
-  "source_file": "medical_adaptations.md",
-  "heading_context": "Matriz de Sustitución por Lesión / Condición",
-  "token_count": 210,
-  "text": "### Contexto: Matriz de Sustitución por Lesión / Condición\n| Condición Registrada | Ejercicios Contraindicados | Ejercicios Sustitutos Seguros | ..."
-}
-```
+Los resultados han sido persistidos en [data/processed_chunks/chunking_benchmark_results.json](../../data/processed_chunks/chunking_benchmark_results.json):
+
+| Configuración Evaluada | chunk_size / overlap (palabras) | Tokens Estimados por Chunk | Chunks en Corpus Real | Subchunks en Doc Extenso (1,200 palabras) | Solapamiento Efectivo Verificado | Decisión de Selección |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Opción A (Pequeña)** | 256 / 32 | ~330 tokens | 8 chunks | 6 subchunks | ✅ 100% (32 palabras exactas) | Descartada (Excesiva fragmentación) |
+| **Opción B (Óptima)** | **512 / 64** | **~650 tokens** | **8 chunks** | **3 subchunks** | **✅ 100% (64 palabras exactas)** | **SELECCIONADA** |
+| **Opción C (Grande)** | 1024 / 128 | ~1300 tokens | 8 chunks | 2 subchunks | ✅ 100% (128 palabras exactas) | Descartada (Baja granularidad) |
+
+### Justificación de la Configuración Seleccionada (512 / 64):
+- **Preservación Atómica del Corpus:** Las secciones actuales de la base de conocimiento oscilan entre 23 y 185 palabras (promedio de 57.0 palabras / 76.9 tokens estimados), por lo que se mantienen como unidades conceptuales completas sin fragmentar tablas de contraindicaciones.
+- **Preparación para Documentos Extensos:** Para protocolos clínicos de gran volumen, la ventana deslizante divide el texto en bloques de 512 palabras con 64 palabras compartidas, comprobado matemáticamente en las pruebas unitarias.
+
+---
+
+## 5. Evidencia de Solapamiento en Pruebas Automatizadas
+
+El funcionamiento de la ventana deslizante y la exactitud del solapamiento están validados mediante la suite de pruebas unitarias [	ests/test_chunking_strategy.py](../../tests/test_chunking_strategy.py):
+
+`python
+# Verificación de coincidencia exacta de solapamiento en test_overlap_exact_words_matching
+c1_tail_overlap = c1_content_words[-64:]
+c2_head_overlap = c2_content_words[:64]
+assert c1_tail_overlap == c2_head_overlap  # 64 palabras exactamente idénticas
+`
+
+---
+
+## 6. Instrucciones de Reproducción
+
+Para ejecutar y verificar la estrategia de chunking y el benchmark empírico:
+
+`ash
+# 1. Ejecutar el benchmark empírico de configuraciones
+python scripts/benchmark_chunking_configs.py
+
+# 2. Ejecutar el procesamiento de la base de conocimiento
+python scripts/chunk_knowledge_base.py
+
+# 3. Ejecutar las pruebas automatizadas de chunking
+python -m unittest tests/test_chunking_strategy.py
+`
