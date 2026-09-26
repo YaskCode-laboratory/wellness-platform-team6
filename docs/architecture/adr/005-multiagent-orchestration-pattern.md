@@ -12,7 +12,7 @@ Autores: Equipo 6 (Maestría en TIC — Proyecto Laboratorio de Computación)
 Al evolucionar la plataforma Wellness Lift hacia un sistema multiagente coordinado (Sprint 3), se requería seleccionar un patrón de orquestación que garantizara la correcta delegación de tareas especializadas (entrenamiento adaptativo, nutrición, analítica, motivación), manteniendo en todo momento los guardrails de seguridad médica y la coherencia del estado conversacional.
 
 ### Decisión
-Se adoptó el patrón **Supervisor / Jerárquico** encabezado por el **Orchestrator Agent**:
+Se adoptó el patrón **Supervisor**, con un **Orchestrator Agent** central encargado del enrutamiento, delegación y consolidación de resultados:
 
 - El Orchestrator Agent analiza cada mensaje del usuario, determina la intención primaria y secundaria, y delega de manera directa o paralela el trabajo a los agentes especializados.
 - El agente especializado desarrollado por el Equipo 6 (**Wellness Coach Agent 2.0**) asume la responsabilidad exclusiva de la prescripción biomecánica y adaptaciones médicas.

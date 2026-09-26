@@ -1,6 +1,6 @@
 """
 Suite de Pruebas Automatizadas para la Arquitectura Multiagente (Issue #19 - S3-01).
-Verifica la presencia, estructura, sintaxis Mermaid y justificación del patrón Supervisor.
+Verifica la presencia y estructura de la documentación arquitectónica, la inclusión de diagramas Mermaid y la justificación del patrón Supervisor.
 """
 
 from pathlib import Path
