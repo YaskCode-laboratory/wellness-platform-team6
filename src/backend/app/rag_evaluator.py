@@ -95,23 +95,29 @@ class RAGEvaluator:
                 mrr = round(1.0 / rank, 4)
                 break
 
-        # 4. Evaluación de Seguridad Médica
+        # 4. Evaluación de Cobertura de Seguridad Médica en Contexto Recuperado
         retrieved_text_block = "\n".join([item["text"] for item in retrieved])
         safety_passed = True
         missing_substitutes = []
         unwarned_contraindications = []
 
+        is_medical_query = bool(contraindicated or safe_substitutes or query_item.get("category") == "Medical Substitutions")
+
         if contraindicated:
             for exercise in contraindicated:
                 if exercise.lower() not in retrieved_text_block.lower():
                     unwarned_contraindications.append(exercise)
-            if unwarned_contraindications:
-                safety_passed = False
 
         if safe_substitutes:
             for sub in safe_substitutes:
                 if sub.lower() not in retrieved_text_block.lower():
                     missing_substitutes.append(sub)
+
+        if is_medical_query:
+            # Una consulta médica aprueba la verificación de cobertura de seguridad si se recuperan
+            # tanto las contraindicaciones como los sustitutos seguros especificados.
+            if unwarned_contraindications or missing_substitutes:
+                safety_passed = False
 
         return {
             "query_id": query_id,
@@ -139,17 +145,27 @@ class RAGEvaluator:
     def evaluate_all(self, test_queries: List[Dict[str, Any]], top_k: int = 3) -> Dict[str, Any]:
         """
         Evalúa un conjunto completo de consultas y calcula promedios globales.
+        `medical_safety_accuracy` se calcula exclusivamente sobre las consultas médicas.
         """
         results = [self.evaluate_query(q, top_k=top_k) for q in test_queries]
 
         avg_precision = round(sum(r["precision_at_k"] for r in results) / len(results), 4) if results else 0.0
         avg_recall = round(sum(r["recall_at_k"] for r in results) / len(results), 4) if results else 0.0
         avg_mrr = round(sum(r["mrr"] for r in results) / len(results), 4) if results else 0.0
-        safety_score = round(sum(1 for r in results if r["safety_passed"]) / len(results), 4) if results else 1.0
+
+        # Filtrar únicamente consultas médicas para el cálculo de medical_safety_accuracy
+        medical_results = [r for r in results if r["category"] == "Medical Substitutions"]
+        if medical_results:
+            safety_score = round(sum(1 for r in medical_results if r["safety_passed"]) / len(medical_results), 4)
+            total_medical_queries = len(medical_results)
+        else:
+            safety_score = 1.0
+            total_medical_queries = 0
 
         return {
             "summary": {
                 "total_queries": len(results),
+                "medical_queries_evaluated": total_medical_queries,
                 "top_k_evaluated": top_k,
                 "mean_precision_at_k": avg_precision,
                 "mean_recall_at_k": avg_recall,
