@@ -149,6 +149,35 @@ class WellnessCoachSpecialist:
 
         return self.reasoning.generate_local_routine(user_id, extracted_facts=extracted_facts)
 
+    def process_interagent_message(self, msg: Any) -> Any:
+        """
+        Procesa una solicitud formal InterAgentMessage y retorna un InterAgentResponse.
+        """
+        import time
+        from app.wellness_agent.communication import InterAgentResponse
+        start_time = time.time()
+
+        message_text = msg.context_payload.get("original_message") or msg.context_payload.get("message", "")
+        user_id = msg.user_id
+
+        res = self.process_specialized_request(user_id, message_text)
+
+        status = res.get("status", "success")
+        return InterAgentResponse(
+            task_id=msg.task_id,
+            trace_id=msg.trace_id,
+            source_agent="WellnessCoachAgent2.0",
+            status=status,
+            content=res.get("response", ""),
+            metadata={
+                "domain": "Biomechanics & Training",
+                "in_domain": res.get("in_domain", True),
+                "fitness_profile": res.get("fitness_profile", {}),
+                "health_conditions": res.get("health_conditions", [])
+            },
+            execution_time_ms=(time.time() - start_time) * 1000
+        )
+
 
 # Instancia singleton del Agente Especializado
 _specialist_instance = WellnessCoachSpecialist()

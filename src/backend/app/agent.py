@@ -67,6 +67,11 @@ class WellnessCoachAgent:
         res = _specialist_instance.process_specialized_request(user_id, message)
         return res["response"]
 
+    def process_interagent_message(self, message: Any) -> Any:
+        """Procesa una solicitud InterAgentMessage delegando en el Agente Especializado del Equipo 6."""
+        from app.wellness_agent.coach_specialist import _specialist_instance
+        return _specialist_instance.process_interagent_message(message)
+
 
 _agent_instance = WellnessCoachAgent()
 

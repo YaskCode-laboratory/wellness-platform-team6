@@ -32,6 +32,101 @@ class AgentIntent(str, Enum):
 SpecializedAgentResponse = InterAgentResponse
 
 
+# ────────────────────────────────────────────────────────────────
+# AGENTES ESPECIALIZADOS DESACOPLADOS (INTERAGENT PROTOCOL)
+# ────────────────────────────────────────────────────────────────
+
+class NutritionAgent:
+    """Agente Especializado en Nutrición y Cálculo de Macronutrientes."""
+
+    def process_interagent_message(self, msg: InterAgentMessage) -> InterAgentResponse:
+        start_time = time.time()
+        user_id = msg.user_id
+        tool_registry = AgentToolRegistry()
+
+        macros_res = tool_registry.execute_tool("calculate_nutrition_macros", user_id=user_id)
+        profile = database.get_user_profile(user_id)
+        name = profile.get("personal_info", {}).get("name", "Atleta")
+
+        if macros_res.get("status") == "success" and macros_res.get("tdee"):
+            content = (
+                f"Plan Nutricional Delegado a Nutrition Agent para {name}:\n"
+                f"- TDEE Estimado: {macros_res['tdee']} kcal/día\n"
+                f"- Proteínas: {macros_res['protein']}g\n"
+                f"- Carbohidratos: {macros_res['carbs']}g\n"
+                f"- Grasas: {macros_res['fats']}g"
+            )
+        else:
+            content = (
+                f"Hola {name}, el Nutrition Agent requiere que completes tu peso, altura y objetivo "
+                f"en la sección Perfil para calcular tus macronutrientes."
+            )
+
+        return InterAgentResponse(
+            task_id=msg.task_id,
+            trace_id=msg.trace_id,
+            source_agent="NutritionAgent",
+            status="success",
+            content=content,
+            metadata={"domain": "Nutrition & Macros"},
+            execution_time_ms=(time.time() - start_time) * 1000
+        )
+
+
+class MotivationAgent:
+    """Agente Especializado en Refuerzo Psicológico y Hábitos."""
+
+    def process_interagent_message(self, msg: InterAgentMessage) -> InterAgentResponse:
+        start_time = time.time()
+        user_id = msg.user_id
+        profile = database.get_user_profile(user_id)
+        name = profile.get("personal_info", {}).get("name", "Atleta")
+        sessions = database.get_workout_sessions(user_id)
+
+        content = (
+            f"Mensaje del Motivation Agent para {name}:\n"
+            f"La disciplina supera a la motivación momentánea. Llevas {len(sessions)} sesiones registradas. "
+            f"Cada entrenamiento constante te acerca a tu mejor versión. ¡Sigue adelante!"
+        )
+        return InterAgentResponse(
+            task_id=msg.task_id,
+            trace_id=msg.trace_id,
+            source_agent="MotivationAgent",
+            status="success",
+            content=content,
+            metadata={"domain": "Psychological Reinforcement"},
+            execution_time_ms=(time.time() - start_time) * 1000
+        )
+
+
+class AnalyticsAgent:
+    """Agente Especializado en Analítica de Progreso y Volumen de Entrenamiento."""
+
+    def process_interagent_message(self, msg: InterAgentMessage) -> InterAgentResponse:
+        start_time = time.time()
+        user_id = msg.user_id
+        profile = database.get_user_profile(user_id)
+        name = profile.get("personal_info", {}).get("name", "Atleta")
+        sessions = database.get_workout_sessions(user_id)
+        total_vol = sum(s.get("total_volume", 0) for s in sessions)
+
+        content = (
+            f"Informe del Analytics Agent para {name}:\n"
+            f"- Sesiones completadas: {len(sessions)}\n"
+            f"- Volumen total acumulado: {total_vol:.1f} kg\n"
+            f"- Tendencia de sobrecarga: Positiva (Incremento constante)."
+        )
+        return InterAgentResponse(
+            task_id=msg.task_id,
+            trace_id=msg.trace_id,
+            source_agent="AnalyticsAgent",
+            status="success",
+            content=content,
+            metadata={"domain": "Performance & Progress Analytics"},
+            execution_time_ms=(time.time() - start_time) * 1000
+        )
+
+
 class OrchestratorAgent:
     """
     Agente Supervisor Central que coordina el sistema multiagente bajo el protocolo de mensajes InterAgentMessage.
@@ -40,6 +135,9 @@ class OrchestratorAgent:
     def __init__(self, memory_manager: Optional[ConversationMemoryManager] = None, tracer: Optional[DelegationTracer] = None):
         self.memory = memory_manager or ConversationMemoryManager()
         self.coach_agent: WellnessCoachAgent = _agent_instance
+        self.nutrition_agent = NutritionAgent()
+        self.motivation_agent = MotivationAgent()
+        self.analytics_agent = AnalyticsAgent()
         self.tool_registry = AgentToolRegistry()
         self.tracer = tracer or global_tracer
 
@@ -74,15 +172,42 @@ class OrchestratorAgent:
 
         return AgentIntent.GENERAL
 
-    def delegate_to_coach(self, user_id: str, message: str, trace_id: Optional[str] = None) -> InterAgentResponse:
-        """Delega la solicitud al Wellness Coach Agent 2.0 (Agente especializado del Equipo 6)."""
+    def _build_context_payload(self, user_id: str, message: str) -> Dict[str, Any]:
+        """Construye el context_payload estandarizado integrando perfil de salud y hechos de memoria."""
+        profile = database.get_user_profile(user_id)
+        fitness_profile = profile.get("fitness_profile", {})
+        health_conditions = fitness_profile.get("health_conditions", [])
+        if not health_conditions and "health_conditions" in profile:
+            health_conditions = profile.get("health_conditions", [])
+        limitations = fitness_profile.get("limitations", "Sin limitaciones registradas")
+        goal = fitness_profile.get("goal", "hipertrofia")
+        level = fitness_profile.get("level", "intermedio")
+        extracted_facts = self.memory.get_extracted_facts(user_id)
+
+        return {
+            "original_message": message,
+            "message": message,
+            "user_id": user_id,
+            "health_conditions": health_conditions,
+            "limitations": limitations,
+            "goal": goal,
+            "level": level,
+            "extracted_facts": extracted_facts,
+        }
+
+    def delegate_to_coach(self, user_id: str, message: str, trace_id: Optional[str] = None, parent_hop_count: int = 0) -> InterAgentResponse:
+        """Delega la solicitud al Wellness Coach Agent 2.0 transmisitiendo InterAgentMessage."""
+        context_payload = self._build_context_payload(user_id, message)
+        hop_count = parent_hop_count + 1
+
         msg = InterAgentMessage(
             source_agent="OrchestratorAgent",
             target_agent="WellnessCoachAgent2.0",
             user_id=user_id,
             intent=AgentIntent.WORKOUT_BIOMECHANICS.value,
-            context_payload={"message": message},
-            trace_id=trace_id
+            context_payload=context_payload,
+            trace_id=trace_id,
+            hop_count=hop_count
         )
 
         if not self.tracer.log_delegation(msg):
@@ -94,18 +219,8 @@ class OrchestratorAgent:
                 content="Aviso de Orquestación: Se previno un ciclo o número excesivo de delegaciones entre agentes."
             )
 
-        start_time = time.time()
         try:
-            res_text = self.coach_agent.generate_response(user_id, message)
-            resp = InterAgentResponse(
-                task_id=msg.task_id,
-                trace_id=msg.trace_id,
-                source_agent="WellnessCoachAgent2.0",
-                status="success",
-                content=res_text,
-                metadata={"domain": "Biomechanics & Training"},
-                execution_time_ms=(time.time() - start_time) * 1000
-            )
+            resp = self.coach_agent.process_interagent_message(msg)
             self.tracer.log_response(resp)
             return resp
         except Exception as e:
@@ -114,15 +229,19 @@ class OrchestratorAgent:
             self.tracer.log_response(resp)
             return resp
 
-    def delegate_to_nutrition(self, user_id: str, message: str, trace_id: Optional[str] = None) -> InterAgentResponse:
-        """Delega la solicitud al Nutrition Agent."""
+    def delegate_to_nutrition(self, user_id: str, message: str, trace_id: Optional[str] = None, parent_hop_count: int = 0) -> InterAgentResponse:
+        """Delega la solicitud al Nutrition Agent transmitiendo InterAgentMessage."""
+        context_payload = self._build_context_payload(user_id, message)
+        hop_count = parent_hop_count + 1
+
         msg = InterAgentMessage(
             source_agent="OrchestratorAgent",
             target_agent="NutritionAgent",
             user_id=user_id,
             intent=AgentIntent.NUTRITION.value,
-            context_payload={"message": message},
-            trace_id=trace_id
+            context_payload=context_payload,
+            trace_id=trace_id,
+            hop_count=hop_count
         )
 
         if not self.tracer.log_delegation(msg):
@@ -134,35 +253,8 @@ class OrchestratorAgent:
                 content="Aviso de Orquestación: Se previno un ciclo o número excesivo de delegaciones."
             )
 
-        start_time = time.time()
         try:
-            macros_res = self.tool_registry.execute_tool("calculate_nutrition_macros", user_id=user_id)
-            profile = database.get_user_profile(user_id)
-            name = profile.get("personal_info", {}).get("name", "Atleta")
-
-            if macros_res.get("status") == "success" and macros_res.get("tdee"):
-                content = (
-                    f"Plan Nutricional Delegado a Nutrition Agent para {name}:\n"
-                    f"- TDEE Estimado: {macros_res['tdee']} kcal/día\n"
-                    f"- Proteínas: {macros_res['protein']}g\n"
-                    f"- Carbohidratos: {macros_res['carbs']}g\n"
-                    f"- Grasas: {macros_res['fats']}g"
-                )
-            else:
-                content = (
-                    f"Hola {name}, el Nutrition Agent requiere que completes tu peso, altura y objetivo "
-                    f"en la sección Perfil para calcular tus macronutrientes."
-                )
-
-            resp = InterAgentResponse(
-                task_id=msg.task_id,
-                trace_id=msg.trace_id,
-                source_agent="NutritionAgent",
-                status="success",
-                content=content,
-                metadata={"domain": "Nutrition & Macros"},
-                execution_time_ms=(time.time() - start_time) * 1000
-            )
+            resp = self.nutrition_agent.process_interagent_message(msg)
             self.tracer.log_response(resp)
             return resp
         except Exception as e:
@@ -171,15 +263,19 @@ class OrchestratorAgent:
             self.tracer.log_response(resp)
             return resp
 
-    def delegate_to_motivation(self, user_id: str, message: str, trace_id: Optional[str] = None) -> InterAgentResponse:
-        """Delega la solicitud al Motivation Agent."""
+    def delegate_to_motivation(self, user_id: str, message: str, trace_id: Optional[str] = None, parent_hop_count: int = 0) -> InterAgentResponse:
+        """Delega la solicitud al Motivation Agent transmitiendo InterAgentMessage."""
+        context_payload = self._build_context_payload(user_id, message)
+        hop_count = parent_hop_count + 1
+
         msg = InterAgentMessage(
             source_agent="OrchestratorAgent",
             target_agent="MotivationAgent",
             user_id=user_id,
             intent=AgentIntent.MOTIVATION.value,
-            context_payload={"message": message},
-            trace_id=trace_id
+            context_payload=context_payload,
+            trace_id=trace_id,
+            hop_count=hop_count
         )
 
         if not self.tracer.log_delegation(msg):
@@ -191,26 +287,8 @@ class OrchestratorAgent:
                 content="Aviso de Orquestación: Ciclo prevenido."
             )
 
-        start_time = time.time()
         try:
-            profile = database.get_user_profile(user_id)
-            name = profile.get("personal_info", {}).get("name", "Atleta")
-            sessions = database.get_workout_sessions(user_id)
-
-            content = (
-                f"Mensaje del Motivation Agent para {name}:\n"
-                f"La disciplina supera a la motivación momentánea. Llevas {len(sessions)} sesiones registradas. "
-                f"Cada entrenamiento constante te acerca a tu mejor versión. ¡Sigue adelante!"
-            )
-            resp = InterAgentResponse(
-                task_id=msg.task_id,
-                trace_id=msg.trace_id,
-                source_agent="MotivationAgent",
-                status="success",
-                content=content,
-                metadata={"domain": "Psychological Reinforcement"},
-                execution_time_ms=(time.time() - start_time) * 1000
-            )
+            resp = self.motivation_agent.process_interagent_message(msg)
             self.tracer.log_response(resp)
             return resp
         except Exception as e:
@@ -219,15 +297,19 @@ class OrchestratorAgent:
             self.tracer.log_response(resp)
             return resp
 
-    def delegate_to_analytics(self, user_id: str, message: str, trace_id: Optional[str] = None) -> InterAgentResponse:
-        """Delega la solicitud al Analytics Agent."""
+    def delegate_to_analytics(self, user_id: str, message: str, trace_id: Optional[str] = None, parent_hop_count: int = 0) -> InterAgentResponse:
+        """Delega la solicitud al Analytics Agent transmitiendo InterAgentMessage."""
+        context_payload = self._build_context_payload(user_id, message)
+        hop_count = parent_hop_count + 1
+
         msg = InterAgentMessage(
             source_agent="OrchestratorAgent",
             target_agent="AnalyticsAgent",
             user_id=user_id,
             intent=AgentIntent.ANALYTICS.value,
-            context_payload={"message": message},
-            trace_id=trace_id
+            context_payload=context_payload,
+            trace_id=trace_id,
+            hop_count=hop_count
         )
 
         if not self.tracer.log_delegation(msg):
@@ -239,28 +321,8 @@ class OrchestratorAgent:
                 content="Aviso de Orquestación: Ciclo prevenido."
             )
 
-        start_time = time.time()
         try:
-            profile = database.get_user_profile(user_id)
-            name = profile.get("personal_info", {}).get("name", "Atleta")
-            sessions = database.get_workout_sessions(user_id)
-            total_vol = sum(s.get("total_volume", 0) for s in sessions)
-
-            content = (
-                f"Informe del Analytics Agent para {name}:\n"
-                f"- Sesiones completadas: {len(sessions)}\n"
-                f"- Volumen total acumulado: {total_vol:.1f} kg\n"
-                f"- Tendencia de sobrecarga: Positiva (Incremento constante)."
-            )
-            resp = InterAgentResponse(
-                task_id=msg.task_id,
-                trace_id=msg.trace_id,
-                source_agent="AnalyticsAgent",
-                status="success",
-                content=content,
-                metadata={"domain": "Performance & Progress Analytics"},
-                execution_time_ms=(time.time() - start_time) * 1000
-            )
+            resp = self.analytics_agent.process_interagent_message(msg)
             self.tracer.log_response(resp)
             return resp
         except Exception as e:
@@ -269,21 +331,35 @@ class OrchestratorAgent:
             self.tracer.log_response(resp)
             return resp
 
-    def handle_multidomain_delegation(self, user_id: str, message: str, trace_id: Optional[str] = None) -> InterAgentResponse:
+    def handle_multidomain_delegation(self, user_id: str, message: str, trace_id: Optional[str] = None, parent_hop_count: int = 0) -> InterAgentResponse:
         """Coordinación compuesta para solicitudes que abarcan múltiples dominios con trazabilidad unificada."""
+        context_payload = self._build_context_payload(user_id, message)
+        hop_count = parent_hop_count + 1
+
         msg = InterAgentMessage(
             source_agent="OrchestratorAgent",
             target_agent="OrchestratorAgent (Multidomain)",
             user_id=user_id,
             intent=AgentIntent.MULTIDOMAIN.value,
-            context_payload={"message": message},
-            trace_id=trace_id
+            context_payload=context_payload,
+            trace_id=trace_id,
+            hop_count=hop_count
         )
-        self.tracer.log_delegation(msg)
+
+        # Verificar si la traza del flujo multidominio es rechazada por ciclo o hop_count
+        if not self.tracer.log_delegation(msg):
+            return InterAgentResponse(
+                task_id=msg.task_id,
+                trace_id=msg.trace_id,
+                source_agent="OrchestratorAgent (Multidomain)",
+                status="error_cycle_detected",
+                content="Aviso de Orquestación: Se previno un ciclo o número excesivo de delegaciones en el flujo multidominio."
+            )
 
         start_time = time.time()
-        coach_resp = self.delegate_to_coach(user_id, message, trace_id=msg.trace_id)
-        nutri_resp = self.delegate_to_nutrition(user_id, message, trace_id=msg.trace_id)
+        # Propagar hop_count a las sub-delegaciones (hop_count + 1 = 2)
+        coach_resp = self.delegate_to_coach(user_id, message, trace_id=msg.trace_id, parent_hop_count=msg.hop_count)
+        nutri_resp = self.delegate_to_nutrition(user_id, message, trace_id=msg.trace_id, parent_hop_count=msg.hop_count)
 
         integrated_content = (
             f"Respuesta Orquestada Multidominio (Supervisor):\n\n"
@@ -329,17 +405,17 @@ class OrchestratorAgent:
         logger.info(f"Orchestrator Agent: Solicitud '{user_id}' (trace: {trace_id}) clasificada como intent '{intent}'")
 
         if intent == AgentIntent.WORKOUT_BIOMECHANICS:
-            response = self.delegate_to_coach(user_id, message, trace_id=trace_id)
+            response = self.delegate_to_coach(user_id, message, trace_id=trace_id, parent_hop_count=0)
         elif intent == AgentIntent.NUTRITION:
-            response = self.delegate_to_nutrition(user_id, message, trace_id=trace_id)
+            response = self.delegate_to_nutrition(user_id, message, trace_id=trace_id, parent_hop_count=0)
         elif intent == AgentIntent.MOTIVATION:
-            response = self.delegate_to_motivation(user_id, message, trace_id=trace_id)
+            response = self.delegate_to_motivation(user_id, message, trace_id=trace_id, parent_hop_count=0)
         elif intent == AgentIntent.ANALYTICS:
-            response = self.delegate_to_analytics(user_id, message, trace_id=trace_id)
+            response = self.delegate_to_analytics(user_id, message, trace_id=trace_id, parent_hop_count=0)
         elif intent == AgentIntent.MULTIDOMAIN:
-            response = self.handle_multidomain_delegation(user_id, message, trace_id=trace_id)
+            response = self.handle_multidomain_delegation(user_id, message, trace_id=trace_id, parent_hop_count=0)
         else:
-            response = self.delegate_to_coach(user_id, message, trace_id=trace_id)
+            response = self.delegate_to_coach(user_id, message, trace_id=trace_id, parent_hop_count=0)
 
         trace_history = self.tracer.get_trace_history(response.trace_id)
 

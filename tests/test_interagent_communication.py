@@ -1,6 +1,6 @@
 """
 Suite de Pruebas Automatizadas para la Comunicación e Interoperabilidad Inter-Agente (Issue #22 - S3-04).
-Verifica serialización de mensajes, trazabilidad, prevención de ciclos y documentación de evolución MCP/A2A.
+Verifica serialización de mensajes, contexto completo en context_payload, propagación de hop_count, prevención de ciclos (directos e indirectos), y trazabilidad en multidominio.
 """
 
 import sys
@@ -24,7 +24,11 @@ def test_message_serialization_deserialization():
         target_agent="WellnessCoachAgent2.0",
         user_id="user_test_comm",
         intent="WORKOUT_BIOMECHANICS",
-        context_payload={"query": "Sentadillas seguras"}
+        context_payload={
+            "original_message": "Sentadillas seguras",
+            "health_conditions": ["Hernia Discal L4-L5"],
+            "limitations": "Evitar carga axial"
+        }
     )
     d = msg.to_dict()
 
@@ -32,6 +36,7 @@ def test_message_serialization_deserialization():
     assert d["target_agent"] == "WellnessCoachAgent2.0"
     assert d["intent"] == "WORKOUT_BIOMECHANICS"
     assert d["hop_count"] == 1
+    assert "health_conditions" in d["context_payload"]
 
     restored = InterAgentMessage.from_dict(d)
     assert restored.task_id == msg.task_id
@@ -39,8 +44,8 @@ def test_message_serialization_deserialization():
     assert restored.user_id == "user_test_comm"
 
 
-def test_delegation_tracer_and_cycle_prevention():
-    """Verifica el rastreo de trazas y la prevención de ciclos de delegación."""
+def test_delegation_tracer_hop_count_and_cycle_prevention():
+    """Verifica el rastreo de trazas, límite de hop_count y la prevención de ciclos directos e indirectos."""
     tracer = DelegationTracer(max_hops=3)
 
     msg1 = InterAgentMessage(
@@ -52,7 +57,7 @@ def test_delegation_tracer_and_cycle_prevention():
     )
     assert tracer.log_delegation(msg1) is True
 
-    # Mensaje con hop_count excedido
+    # Hop count excedido (> 3)
     msg_exceeded = InterAgentMessage(
         source_agent="AgentA",
         target_agent="AgentB",
@@ -62,8 +67,8 @@ def test_delegation_tracer_and_cycle_prevention():
     )
     assert tracer.log_delegation(msg_exceeded) is False, "Debe rechazar cuando hop_count > max_hops"
 
-    # Detección de ciclo directo (Coach -> Orchestrator -> Coach con el mismo trace)
-    msg_cycle = InterAgentMessage(
+    # Detección de ciclo directo (Coach -> Orchestrator)
+    msg_direct_cycle = InterAgentMessage(
         source_agent="WellnessCoachAgent2.0",
         target_agent="OrchestratorAgent",
         user_id="u1",
@@ -71,13 +76,24 @@ def test_delegation_tracer_and_cycle_prevention():
         trace_id=msg1.trace_id,
         hop_count=2
     )
-    assert tracer.log_delegation(msg_cycle) is False, "Debe detectar el ciclo de delegación inversa"
+    assert tracer.log_delegation(msg_direct_cycle) is False, "Debe detectar el ciclo de delegación directa"
+
+    # Detección de ciclo indirecto (A -> B -> C -> A)
+    tracer_indirect = DelegationTracer(max_hops=5)
+    t_id = "TRACE-INDIRECT-01"
+    msg_a = InterAgentMessage("AgentA", "AgentB", "u2", "TEST", trace_id=t_id, hop_count=1)
+    msg_b = InterAgentMessage("AgentB", "AgentC", "u2", "TEST", trace_id=t_id, hop_count=2)
+    msg_c = InterAgentMessage("AgentC", "AgentA", "u2", "TEST", trace_id=t_id, hop_count=3)
+
+    assert tracer_indirect.log_delegation(msg_a) is True
+    assert tracer_indirect.log_delegation(msg_b) is True
+    assert tracer_indirect.log_delegation(msg_c) is False, "Debe detectar el ciclo indirecto A -> B -> C -> A"
 
 
-def test_orchestrator_end_to_end_trace_logging():
-    """Verifica que process_user_request incorpore trace_id e historial de delegación."""
+def test_orchestrator_end_to_end_context_and_trace_logging():
+    """Verifica que process_user_request transmita context_payload completo e incorpore trace_id e historial."""
     orch = OrchestratorAgent()
-    res = orch.process_user_request("user_trace_test", "Tengo dolor de rodilla al hacer sentadilla")
+    res = orch.process_user_request("user123", "Tengo dolor de rodilla al hacer sentadilla")
 
     assert "trace_id" in res
     assert "task_id" in res
@@ -85,15 +101,20 @@ def test_orchestrator_end_to_end_trace_logging():
     assert "trace_history" in res
     assert len(res["trace_history"]) >= 1
     assert res["trace_history"][0]["target_agent"] == "WellnessCoachAgent2.0"
+    assert res["trace_history"][0]["hop_count"] == 1
 
 
-def test_multidomain_trace_logging():
-    """Verifica la trazabilidad en solicitudes compuestas multidominio."""
+def test_multidomain_trace_logging_and_hop_propagation():
+    """Verifica la trazabilidad y la propagación de hop_count en solicitudes compuestas multidominio."""
     orch = OrchestratorAgent()
-    res = orch.process_user_request("user_multi_trace", "Rutina de piernas y plan de macronutrientes")
+    res = orch.process_user_request("user123", "Rutina de piernas y plan de macronutrientes")
 
     assert res["intent"] == AgentIntent.MULTIDOMAIN.value
-    assert len(res["trace_history"]) >= 3  # Multidomain + Coach + Nutrition
+    history = res["trace_history"]
+    assert len(history) >= 3  # Multidomain (hop 1) + Coach (hop 2) + Nutrition (hop 2)
+    assert history[0]["hop_count"] == 1
+    assert history[1]["hop_count"] == 2
+    assert history[2]["hop_count"] == 2
 
 
 def test_communication_docs_integrity():
