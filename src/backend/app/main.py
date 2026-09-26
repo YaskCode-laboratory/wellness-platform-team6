@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import uuid
+import logging
 from app import database, schemas, agent, orchestrator
 
 logger = logging.getLogger(__name__)

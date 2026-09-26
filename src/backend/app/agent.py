@@ -123,7 +123,8 @@ def get_groq_client() -> Optional[Any]:
 
 
 def _generate_local_routine(user_id: str) -> Dict[str, Any]:
-    return reasoning_engine.generate_local_routine(user_id)
+    facts = _agent_instance.memory.get_extracted_facts(user_id)
+    return reasoning_engine.generate_local_routine(user_id, extracted_facts=facts)
 
 
 def generate_weekly_routine(user_id: str) -> Dict[str, Any]:
