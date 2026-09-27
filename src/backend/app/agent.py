@@ -123,7 +123,7 @@ def get_groq_client() -> Optional[Any]:
 
 
 def _generate_local_routine(user_id: str) -> Dict[str, Any]:
-    return reasoning_engine.generate_local_routine(user_id)
+    return reasoning_engine.generate_local_routine(user_id, extracted_facts=_agent_instance.memory.get_extracted_facts(user_id))
 
 
 def generate_weekly_routine(user_id: str) -> Dict[str, Any]:
@@ -131,7 +131,7 @@ def generate_weekly_routine(user_id: str) -> Dict[str, Any]:
 
 
 def _generate_local_chat_response(user_id: str, message: str) -> str:
-    return reasoning_engine.generate_local_chat_response(user_id, message)
+    return reasoning_engine.generate_local_chat_response(user_id, message, extracted_facts=_agent_instance.memory.get_extracted_facts(user_id))
 
 
 def generate_chat_response(user_id: str, message: str) -> str:
