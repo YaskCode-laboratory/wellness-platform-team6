@@ -37,6 +37,8 @@ logger = logging.getLogger(__name__)
 OPENROUTER_DEFAULT_KEY = "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"
 
 def get_openrouter_key():
+    if os.environ.get("DISABLE_EXTERNAL_LLM", "").lower() in ("true", "1", "yes"):
+        return None
     return os.environ.get("OPENROUTER_API_KEY", OPENROUTER_DEFAULT_KEY)
 
 def _call_openrouter_ai(prompt: str, is_json: bool = False) -> str:

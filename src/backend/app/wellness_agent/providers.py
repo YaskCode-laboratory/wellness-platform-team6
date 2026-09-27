@@ -32,14 +32,20 @@ class LLMProviderManager:
 
     @staticmethod
     def get_openrouter_key() -> Optional[str]:
+        if os.environ.get("DISABLE_EXTERNAL_LLM", "").lower() in ("true", "1", "yes"):
+            return None
         return os.environ.get("OPENROUTER_API_KEY", OPENROUTER_DEFAULT_KEY)
 
     @staticmethod
     def get_gemini_key() -> Optional[str]:
+        if os.environ.get("DISABLE_EXTERNAL_LLM", "").lower() in ("true", "1", "yes"):
+            return None
         return os.environ.get("GEMINI_API_KEY")
 
     @staticmethod
     def get_groq_key() -> Optional[str]:
+        if os.environ.get("DISABLE_EXTERNAL_LLM", "").lower() in ("true", "1", "yes"):
+            return None
         return os.environ.get("GROQ_API_KEY")
 
     def call_openrouter(self, prompt: str, is_json: bool = False) -> Optional[str]:

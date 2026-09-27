@@ -26,6 +26,7 @@ except ModuleNotFoundError:
 
 class TestMultiAgentEvaluation(unittest.TestCase):
     def setUp(self):
+        os.environ["DISABLE_EXTERNAL_LLM"] = "true"
         self.evaluator = MultiAgentFlowEvaluator()
         self.orchestrator = OrchestratorAgent()
 
@@ -88,6 +89,26 @@ class TestMultiAgentEvaluation(unittest.TestCase):
         self.assertTrue(res["trace_id"].startswith("TRACE-"))
         self.assertGreater(len(res["trace_history"]), 0)
 
+    def test_trace_id_uniqueness_and_continuity(self):
+        """
+        Verifica que solicitudes diferentes generen trace_id distintos y que las delegaciones
+        de un mismo flujo multidominio mantengan el mismo trace_id.
+        """
+        res1 = self.orchestrator.process_user_request("user_uq_01", "¿Qué ejercicios puedo hacer para bíceps?")
+        res2 = self.orchestrator.process_user_request("user_uq_02", "¿Qué ejercicios puedo hacer para tríceps?")
+        
+        # Unicidad
+        self.assertNotEqual(res1["trace_id"], res2["trace_id"])
+
+        # Continuidad en flujo multidominio
+        res_multi = self.orchestrator.process_user_request("user_uq_03", "Diseña mi rutina de pierna y calcula mis calorías")
+        shared_trace_id = res_multi["trace_id"]
+        
+        trace_history = self.orchestrator.tracer.get_trace_history(shared_trace_id)
+        self.assertGreaterEqual(len(trace_history), 3)
+        for entry in trace_history:
+            self.assertEqual(entry["task_id"].startswith("TASK-"), True)
+
     def test_latency_measurement_presence(self):
         """Verifica que se mida y registre el tiempo de respuesta (latencia en ms)."""
         res = self.orchestrator.process_user_request("user_lat_01", "¿Qué alternativas tengo para sentadilla?")
@@ -98,7 +119,7 @@ class TestMultiAgentEvaluation(unittest.TestCase):
         """Verifica la ejecución integral del MultiAgentFlowEvaluator y sus métricas consolidadas."""
         summary = self.evaluator.run_suite()
 
-        self.assertEqual(summary["total_test_cases"], 6)
+        self.assertEqual(summary["total_test_cases"], 7)
         self.assertEqual(summary["intent_accuracy_pct"], 100.0)
         self.assertEqual(summary["delegation_accuracy_pct"], 100.0)
         self.assertEqual(summary["collaboration_success_pct"], 100.0)
@@ -106,6 +127,12 @@ class TestMultiAgentEvaluation(unittest.TestCase):
         self.assertGreaterEqual(summary["overall_quality_score_pct"], 0.0)
         self.assertGreater(len(summary["limitations_identified"]), 0)
         self.assertGreater(len(summary["proposed_improvements"]), 0)
+
+    def test_error_and_fallback_handling(self):
+        """Verifica el manejo de errores/fallbacks cuando faltan datos antropométricos o se previenen ciclos."""
+        res_fallback = self.orchestrator.process_user_request("unregistered_user_99", "Calcula mis calorías y macronutrientes")
+        self.assertEqual(res_fallback["delegated_agent"], "NutritionAgent")
+        self.assertIn("Perfil", res_fallback["response"])
 
 
 if __name__ == "__main__":
