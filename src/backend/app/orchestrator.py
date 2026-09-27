@@ -141,34 +141,39 @@ class OrchestratorAgent:
         self.tool_registry = AgentToolRegistry()
         self.tracer = tracer or global_tracer
 
+    def detect_domains(self, message: str) -> List[AgentIntent]:
+        """
+        Detecta dinámicamente la lista de dominios / intenciones involucrados en la solicitud.
+        """
+        msg_lower = message.lower().strip()
+
+        workout_kw = ["rutina", "ejercicio", "sentadilla", "press", "músculo", "lesión", "dolor", "espalda", "rodilla", "hombro", "banca", "reemplaz", "alternativa", "pierna", "pecho", "tricep", "bicep"]
+        nutrition_kw = ["nutrición", "macro", "caloría", "tdee", "proteína", "carbohidrato", "dieta", "comer", "comida"]
+        motivation_kw = ["motiva", "cansado", "ánimo", "hábito", "constancia", "flojera"]
+        analytics_kw = ["récord", "volumen", "sesiones", "progreso", "peso máximo", "historial"]
+
+        domains = []
+        if any(k in msg_lower for k in workout_kw):
+            domains.append(AgentIntent.WORKOUT_BIOMECHANICS)
+        if any(k in msg_lower for k in nutrition_kw):
+            domains.append(AgentIntent.NUTRITION)
+        if any(k in msg_lower for k in motivation_kw):
+            domains.append(AgentIntent.MOTIVATION)
+        if any(k in msg_lower for k in analytics_kw):
+            domains.append(AgentIntent.ANALYTICS)
+
+        return domains
+
     def classify_intent(self, message: str) -> AgentIntent:
         """
         Analiza el texto de la solicitud y clasifica la intención primaria del usuario.
         """
-        msg_lower = message.lower().strip()
-
-        workout_kw = ["rutina", "ejercicio", "sentadilla", "press", "músculo", "lesión", "dolor", "espalda", "rodilla", "hombro", "banca", "reemplaz", "alternativa"]
-        nutrition_kw = ["nutrición", "macro", "caloría", "tdee", "proteína", "carbohidrato", "dieta", "comer"]
-        motivation_kw = ["motiva", "cansado", "ánimo", "hábito", "constancia", "flojera"]
-        analytics_kw = ["récord", "volumen", "sesiones", "progreso", "peso máximo", "historial"]
-
-        has_workout = any(k in msg_lower for k in workout_kw)
-        has_nutrition = any(k in msg_lower for k in nutrition_kw)
-        has_motivation = any(k in msg_lower for k in motivation_kw)
-        has_analytics = any(k in msg_lower for k in analytics_kw)
-
-        active_domains = sum([has_workout, has_nutrition, has_motivation, has_analytics])
-        if active_domains >= 2:
+        domains = self.detect_domains(message)
+        if len(domains) >= 2:
             return AgentIntent.MULTIDOMAIN
 
-        if has_workout:
-            return AgentIntent.WORKOUT_BIOMECHANICS
-        if has_nutrition:
-            return AgentIntent.NUTRITION
-        if has_analytics:
-            return AgentIntent.ANALYTICS
-        if has_motivation:
-            return AgentIntent.MOTIVATION
+        if len(domains) == 1:
+            return domains[0]
 
         return AgentIntent.GENERAL
 
@@ -332,7 +337,7 @@ class OrchestratorAgent:
             return resp
 
     def handle_multidomain_delegation(self, user_id: str, message: str, trace_id: Optional[str] = None, parent_hop_count: int = 0) -> InterAgentResponse:
-        """Coordinación compuesta para solicitudes que abarcan múltiples dominios con trazabilidad unificada."""
+        """Coordinación compuesta para solicitudes que abarcan múltiples dominios con trazabilidad unificada y estados compuestos."""
         context_payload = self._build_context_payload(user_id, message)
         hop_count = parent_hop_count + 1
 
@@ -357,25 +362,47 @@ class OrchestratorAgent:
             )
 
         start_time = time.time()
-        # Propagar hop_count a las sub-delegaciones (hop_count + 1 = 2)
-        coach_resp = self.delegate_to_coach(user_id, message, trace_id=msg.trace_id, parent_hop_count=msg.hop_count)
-        nutri_resp = self.delegate_to_nutrition(user_id, message, trace_id=msg.trace_id, parent_hop_count=msg.hop_count)
+        active_domains = self.detect_domains(message)
+        if not active_domains:
+            active_domains = [AgentIntent.WORKOUT_BIOMECHANICS, AgentIntent.NUTRITION]
 
-        integrated_content = (
-            f"Respuesta Orquestada Multidominio (Supervisor):\n\n"
-            f"--- Módulo Entrenador (Wellness Coach 2.0) ---\n"
-            f"{coach_resp.content}\n\n"
-            f"--- Módulo Nutrición (Nutrition Agent) ---\n"
-            f"{nutri_resp.content}"
-        )
+        responses: List[InterAgentResponse] = []
+        delegated_agents: List[str] = []
+        content_parts: List[str] = []
+
+        domain_agent_map = {
+            AgentIntent.WORKOUT_BIOMECHANICS: (self.delegate_to_coach, "Módulo Entrenador (Wellness Coach 2.0)", "WellnessCoachAgent2.0"),
+            AgentIntent.NUTRITION: (self.delegate_to_nutrition, "Módulo Nutrición (Nutrition Agent)", "NutritionAgent"),
+            AgentIntent.MOTIVATION: (self.delegate_to_motivation, "Módulo Motivación (Motivation Agent)", "MotivationAgent"),
+            AgentIntent.ANALYTICS: (self.delegate_to_analytics, "Módulo Analítica (Analytics Agent)", "AnalyticsAgent"),
+        }
+
+        for domain in active_domains:
+            if domain in domain_agent_map:
+                delegate_fn, title, agent_name = domain_agent_map[domain]
+                sub_resp = delegate_fn(user_id, message, trace_id=msg.trace_id, parent_hop_count=msg.hop_count)
+                responses.append(sub_resp)
+                delegated_agents.append(agent_name)
+                content_parts.append(f"--- {title} ---\n{sub_resp.content}")
+
+        integrated_content = "Respuesta Orquestada Multidominio (Supervisor):\n\n" + "\n\n".join(content_parts)
+
+        # Evaluación de estado compuesto: success, partial_success, error_fallback
+        success_count = sum(1 for r in responses if r.status == "success")
+        if success_count == len(responses) and len(responses) > 0:
+            composite_status = "success"
+        elif success_count > 0:
+            composite_status = "partial_success"
+        else:
+            composite_status = "error_fallback"
 
         resp = InterAgentResponse(
             task_id=msg.task_id,
             trace_id=msg.trace_id,
             source_agent="OrchestratorAgent (Multidomain)",
-            status="success",
+            status=composite_status,
             content=integrated_content,
-            metadata={"delegated_agents": ["WellnessCoachAgent2.0", "NutritionAgent"]},
+            metadata={"delegated_agents": delegated_agents},
             execution_time_ms=(time.time() - start_time) * 1000
         )
         self.tracer.log_response(resp)

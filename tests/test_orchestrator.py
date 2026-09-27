@@ -92,3 +92,40 @@ def test_process_user_request_end_to_end(orchestrator):
     assert result["delegated_agent"] == "WellnessCoachAgent2.0"
     assert result["status"] == "success"
     assert len(result["response"]) > 0
+
+
+def test_detect_domains(orchestrator):
+    """Verifica la detección dinámica de múltiples dominios activos."""
+    domains = orchestrator.detect_domains("Quiero una rutina de piernas y calcular mis macronutrientes de nutrición")
+    assert AgentIntent.WORKOUT_BIOMECHANICS in domains
+    assert AgentIntent.NUTRITION in domains
+    assert len(domains) == 2
+
+
+def test_multidomain_composite_statuses(orchestrator, monkeypatch):
+    """Verifica el cálculo de estados compuestos (success, partial_success, error_fallback)."""
+    from app.wellness_agent.communication import InterAgentResponse
+
+    user_id = "test_composite"
+    msg = "Rutina de piernas y nutrición"
+
+    # 1. Caso success (ambos tienen éxito)
+    res_success = orchestrator.handle_multidomain_delegation(user_id, msg)
+    assert res_success.status == "success"
+
+    # 2. Caso partial_success (coach falla, nutrición pasa)
+    def mock_faulty_coach(*args, **kwargs):
+        return InterAgentResponse("t1", "tr1", "WellnessCoachAgent2.0", "error_fallback", "Error temporal coach")
+
+    monkeypatch.setattr(orchestrator, "delegate_to_coach", mock_faulty_coach)
+    res_partial = orchestrator.handle_multidomain_delegation(user_id, msg)
+    assert res_partial.status == "partial_success"
+
+    # 3. Caso error_fallback (ambos fallan)
+    def mock_faulty_nutri(*args, **kwargs):
+        return InterAgentResponse("t2", "tr2", "NutritionAgent", "error_fallback", "Error temporal nutri")
+
+    monkeypatch.setattr(orchestrator, "delegate_to_nutrition", mock_faulty_nutri)
+    res_error = orchestrator.handle_multidomain_delegation(user_id, msg)
+    assert res_error.status == "error_fallback"
+
