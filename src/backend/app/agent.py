@@ -61,10 +61,14 @@ class WellnessCoachAgent:
         logger.info(f"Usando motor local determinista para rutina de {user_id}")
         return self.reasoning.generate_local_routine(user_id, extracted_facts=extracted_facts)
 
+    def process_specialized_request(self, user_id: str, message: str) -> Dict[str, Any]:
+        """Procesa una solicitud especializada preservando el diccionario con status, in_domain y response."""
+        from app.wellness_agent.coach_specialist import _specialist_instance
+        return _specialist_instance.process_specialized_request(user_id, message)
+
     def generate_response(self, user_id: str, message: str) -> str:
         """Genera una respuesta en la conversación delegando en el Agente Especializado del Equipo 6."""
-        from app.wellness_agent.coach_specialist import _specialist_instance
-        res = _specialist_instance.process_specialized_request(user_id, message)
+        res = self.process_specialized_request(user_id, message)
         return res["response"]
 
 

@@ -1,6 +1,6 @@
 """
 Suite de Pruebas Automatizadas para el Agente Especializado del Equipo 6 (Issue #21 - S3-03).
-Verifica responsabilidad de dominio, delimitación de fronteras fuera de dominio, lectura de fitness_profile, RAG/Tool Calling y System Prompt oficial.
+Verifica responsabilidad de dominio, delimitación de fronteras fuera de dominio, lectura de fitness_profile, RAG/Tool Calling, System Prompt oficial y propagación de out_of_domain.
 """
 
 import sys
@@ -42,10 +42,11 @@ def test_domain_boundary_verification(specialist):
 
 
 def test_system_prompt_single_source_of_truth(specialist):
-    """Verifica que el System Prompt provenga del archivo oficial prompts/system_prompt_wellness_coach_2.0.txt."""
+    """Verifica que el System Prompt provenga exactamente del archivo oficial prompts/system_prompt_wellness_coach_2.0.txt."""
     loaded = load_system_prompt()
     assert "Wellness Coach AI 2.0" in loaded or "entrenador" in loaded.lower()
-    assert "REGLAS DE ACTUACIÓN" in loaded or "fisioterapia" in loaded.lower() or "biomecánica" in loaded.lower()
+    assert "REGLAS DE ACTUACIÓN" in loaded
+    assert "GUARDRAILS DE SEGURIDAD BIOMECÁNICA" in loaded
     assert specialist.system_prompt == loaded
 
 
@@ -73,6 +74,15 @@ def test_out_of_domain_specialized_request(specialist):
     assert result["in_domain"] is False
     assert result["status"] == "out_of_domain"
     assert len(result["response"]) > 0
+
+
+def test_out_of_domain_propagation_to_orchestrator():
+    """Verifica que el estado out_of_domain y in_domain=False se propaguen formalmente hasta el Orchestrator."""
+    orch = OrchestratorAgent()
+    res = orch.process_user_request("test_user_out_domain_prop", "Dame una receta de cocina vegetal paso a paso")
+
+    assert res["status"] == "out_of_domain" or res["metadata"].get("in_domain") is False
+    assert res["delegated_agent"] == "WellnessCoachAgent2.0"
 
 
 def test_orchestrator_integration_with_specialist():

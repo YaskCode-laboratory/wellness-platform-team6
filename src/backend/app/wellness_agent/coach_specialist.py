@@ -17,22 +17,34 @@ from app.wellness_agent.tools import AgentToolRegistry
 
 logger = logging.getLogger(__name__)
 
-# Ruta al System Prompt oficial (Única Fuente de Verdad)
-SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent.parent.parent.parent / "prompts" / "system_prompt_wellness_coach_2.0.txt"
+# Nombre del archivo de System Prompt oficial
+PROMPT_FILENAME = "system_prompt_wellness_coach_2.0.txt"
 
 
 def load_system_prompt() -> str:
     """Carga el System Prompt especializado desde el archivo oficial prompts/system_prompt_wellness_coach_2.0.txt."""
-    if SYSTEM_PROMPT_PATH.exists():
-        try:
-            with open(SYSTEM_PROMPT_PATH, "r", encoding="utf-8") as f:
-                content = f.read().strip()
-                if content:
-                    return content
-        except Exception as e:
-            logger.warning(f"Error al leer system prompt desde {SYSTEM_PROMPT_PATH}: {e}")
+    current_file_dir = Path(__file__).resolve().parent
+    possible_paths = [
+        current_file_dir.parent.parent.parent / "prompts" / PROMPT_FILENAME,  # <repo_root>/prompts/...
+        current_file_dir.parent.parent / "prompts" / PROMPT_FILENAME,
+        Path.cwd() / "prompts" / PROMPT_FILENAME,
+        Path.cwd().parent / "prompts" / PROMPT_FILENAME,
+    ]
+
+    for path in possible_paths:
+        if path.exists():
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    if content:
+                        logger.info(f"System prompt cargado exitosamente desde {path}")
+                        return content
+            except Exception as e:
+                logger.warning(f"Error al leer system prompt desde {path}: {e}")
+
+    logger.error(f"No se pudo encontrar el archivo prompts/{PROMPT_FILENAME} en las rutas conocidas.")
     return (
-        "Eres Wellness Coach AI 2.0, un entrenador personal deportivo de élite y especialista en fisioterapia biomecánica.\n"
+        "Eres 'Wellness Coach AI 2.0', un entrenador personal deportivo de élite y especialista en fisioterapia biomecánica.\n"
         "Actúa de manera profesional, empática, concisa y basada en evidencia científica deportiva.\n"
         "Prioriza en todo momento la salud articular y la prevención de lesiones del atleta.\n"
         "Sé conciso y no utilices ningún tipo de emoji."
@@ -208,6 +220,38 @@ Sé conciso. No utilices ningún tipo de emoji.
             "health_conditions": health_conds,
             "response": response_text,
         }
+
+    def process_interagent_message(self, msg: Any) -> Any:
+        """
+        Procesa una solicitud formal InterAgentMessage y retorna un InterAgentResponse,
+        preservando explícitamente el estado "out_of_domain" y "in_domain" para la propagación al Orchestrator.
+        """
+        import time
+        from app.wellness_agent.communication import InterAgentResponse
+        start_time = time.time()
+
+        message_text = msg.context_payload.get("original_message") or msg.context_payload.get("message", "")
+        user_id = msg.user_id
+
+        res = self.process_specialized_request(user_id, message_text)
+
+        status = res.get("status", "success")
+        in_domain = res.get("in_domain", True)
+
+        return InterAgentResponse(
+            task_id=msg.task_id,
+            trace_id=msg.trace_id,
+            source_agent="WellnessCoachAgent2.0",
+            status=status,
+            content=res.get("response", ""),
+            metadata={
+                "domain": "Biomechanics & Training",
+                "in_domain": in_domain,
+                "fitness_profile": res.get("fitness_profile", {}),
+                "health_conditions": res.get("health_conditions", [])
+            },
+            execution_time_ms=(time.time() - start_time) * 1000
+        )
 
     def generate_adaptive_routine(self, user_id: str) -> Dict[str, Any]:
         """Genera una rutina semanal adaptada a las lesiones y perfil del atleta."""
