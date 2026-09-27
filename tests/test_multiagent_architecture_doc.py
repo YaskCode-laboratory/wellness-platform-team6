@@ -31,3 +31,4 @@ def test_adr_005_integrity():
     assert "ADR-005" in content
     assert "Patrón Supervisor" in content or "Supervisor" in content
     assert "Orchestrator Agent" in content
+    assert "Hierarchical" in content, "ADR-005 debe incluir el patrón Hierarchical en la comparativa de patrones evaluados"
