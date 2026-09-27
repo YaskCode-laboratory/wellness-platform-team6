@@ -16,8 +16,8 @@ db = None
 use_mock = True
 
 # Si existe la variable de entorno para GCP o Firestore, intentamos conectar
-# Para demos rápidos, se puede configurar GOOGLE_APPLICATION_CREDENTIALS
-if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or os.environ.get("FIRESTORE_EMULATOR_HOST") or os.environ.get("GOOGLE_CLOUD_PROJECT"):
+# Para demos rápidos, se puede configurar GOOGLE_APPLICATION_CREDENTIALS o GCP_PROJECT_ID
+if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or os.environ.get("FIRESTORE_EMULATOR_HOST") or os.environ.get("GOOGLE_CLOUD_PROJECT") or os.environ.get("GCP_PROJECT_ID"):
     try:
         # Inicializa el cliente. Si no hay project_id explícito, Google Cloud SDK lo detecta del entorno
         db = firestore.Client()
