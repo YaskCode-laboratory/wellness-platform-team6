@@ -168,7 +168,7 @@ class AgentToolRegistry:
         }
 
     def retrieve_rag_knowledge(self, query_text: str, top_k: int = 2) -> List[Dict[str, Any]]:
-        """Consulta la base de conocimiento RAG mediante búsqueda semántica vectorial."""
+        """Recupera contexto semántico de la base vectorial RAG."""
         if not query_text:
             return []
 
