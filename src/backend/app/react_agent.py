@@ -1,142 +1,116 @@
 """
-Módulo Wellness Coach Agent 2.0 — Patrón ReAct y Flujo de Razonamiento (Issue #16 & Issue #18)
-Implementa el ciclo de razonamiento Thought -> Action -> Observation -> Final Answer con prevención de bucles infinitos.
+Módulo Wellness Coach Agent 2.0 — Patrón ReAct y Flujo de Razonamiento (Issue #16 & Issue #18).
+Implementa el ciclo de razonamiento Thought -> Action -> Observation -> Final Answer integrado con AgentToolRegistry
+y protección contra bucles infinitos.
 """
 
 import os
 import sys
 import json
-from typing import Dict, Any, List, Tuple
+import logging
+from typing import Dict, Any, List, Optional, Tuple
 
 backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 try:
-    from app.rag_pipeline import RAGPipeline
+    from app.wellness_agent.tools import AgentToolRegistry
 except ModuleNotFoundError:
-    from rag_pipeline import RAGPipeline
+    try:
+        from wellness_agent.tools import AgentToolRegistry
+    except ModuleNotFoundError:
+        from .wellness_agent.tools import AgentToolRegistry
+
+logger = logging.getLogger(__name__)
+
 
 class ReActAgent:
-    def __init__(self):
-        self.rag_pipeline = RAGPipeline()
-        self.tool_registry = {
-            "get_athlete_technical_file": self._tool_get_athlete_technical_file,
-            "search_medical_contraindications": self._tool_search_medical_contraindications,
-            "query_rag_vector_store": self._tool_query_rag_vector_store,
-            "calculate_progressive_overload": self._tool_calculate_progressive_overload
-        }
+    """
+    Agente ReAct (Reasoning and Acting) que coordina pensamientos, selección dinámica de herramientas
+    (AgentToolRegistry) y síntesis de respuestas finales con prevención de bucles infinitos.
+    """
 
-    # --- REGISTRO DE HERRAMIENTAS (TOOLS) ---
-    def _tool_get_athlete_technical_file(self, athlete_id: str) -> Dict[str, Any]:
-        """Herramienta 1: Consulta la Ficha Técnica Deportiva y Médica del Atleta."""
-        mock_database = {
-            "user123": {
-                "id": "user123",
-                "name": "Juan Pérez",
-                "health_conditions": "Hernia Discal L4-L5",
-                "fitness_level": "Intermedio",
-                "current_routine": "Sentadilla Libre 4x10, Prensa 3x12",
-                "assigned_coach": "coach_carlos"
-            },
-            "user456": {
-                "id": "user456",
-                "name": "María Fernández",
-                "health_conditions": "Lesión de Rodilla (Menisco)",
-                "fitness_level": "Avanzado",
-                "current_routine": "Sentadilla Hack 4x8, Zancadas 3x10",
-                "assigned_coach": "coach_maria"
-            }
-        }
-        return mock_database.get(athlete_id, {
-            "id": athlete_id,
-            "name": "Atleta Registrado",
-            "health_conditions": "Ninguna",
-            "fitness_level": "Intermedio",
-            "current_routine": "Rutina General 3x10"
-        })
+    def __init__(self, tool_registry: Optional[AgentToolRegistry] = None):
+        self.tool_registry = tool_registry or AgentToolRegistry()
 
-    def _tool_search_medical_contraindications(self, condition: str) -> Dict[str, Any]:
-        """Herramienta 2: Busca contraindicaciones biomecánicas según patología médica."""
-        condition_lower = condition.lower()
-        if "lumbar" in condition_lower or "hernia" in condition_lower:
-            return {
-                "condition": condition,
-                "contraindicated_exercises": ["Sentadilla Libre con Barra", "Peso Muerto Convencional", "Press Militar de Pie"],
-                "recommended_substitutes": ["Prensa Inclinada a 45°", "Peso Muerto Rumano asistido en Polea"],
-                "rationale": "Eliminación de compresión axial sobre discos L4-L5."
-            }
-        elif "rodilla" in condition_lower or "menisco" in condition_lower:
-            return {
-                "condition": condition,
-                "contraindicated_exercises": ["Sentadilla Hack Profunda", "Extensión de Rodilla en Carga Máxima"],
-                "recommended_substitutes": ["Prensa de Cadera", "Peso Muerto Rumano en Cadena Posterior"],
-                "rationale": "Minimización de cizallamiento femororrotuliano."
-            }
-        return {
-            "condition": condition,
-            "contraindicated_exercises": [],
-            "recommended_substitutes": ["Ejercicio General Adaptado"],
-            "rationale": "Sin contraindicaciones severas registradas."
-        }
-
-    def _tool_query_rag_vector_store(self, query: str) -> Dict[str, Any]:
-        """Herramienta 3: Ejecuta una consulta vectorial sobre la Base de Conocimiento RAG."""
-        results = self.rag_pipeline.retrieve_context(query, top_k=2)
-        return {
-            "query": query,
-            "retrieved_chunks": results
-        }
-
-    def _tool_calculate_progressive_overload(self, sets: int, reps: int, weight_kg: float) -> Dict[str, Any]:
-        """Herramienta 4: Calcula el Volumen Total y sugiere incremento de sobrecarga progresiva."""
-        volume = sets * reps * weight_kg
-        new_weight = round(weight_kg * 1.05, 1)  # Incremento seguro del +5%
-        return {
-            "current_volume_kg": volume,
-            "suggested_next_weight_kg": new_weight,
-            "progression_rule": "Incremento de carga del +5% manteniendo RPE 8."
-        }
-
-    # --- CICLO DE RAZONAMIENTO REACT ---
-    def run_react_loop(self, user_prompt: str, athlete_id: str = None, max_iterations: int = 5) -> Dict[str, Any]:
-        steps = []
+    def run_react_loop(
+        self,
+        user_prompt: str,
+        athlete_id: str = "user123",
+        max_iterations: int = 5,
+        force_repeat_action: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Ejecuta el bucle ReAct adaptando las herramientas a la solicitud del usuario
+        y detectando activamente ciclos duplicados de herramientas.
+        """
+        steps: List[Dict[str, Any]] = []
         executed_tool_calls = set()
-        
-        current_thought = ""
+        loop_detected = False
         final_answer = ""
-        
+        msg_lower = user_prompt.lower().strip()
+
         for iteration in range(1, max_iterations + 1):
-            if iteration == 1:
-                current_thought = f"PENSAMIENTO [{iteration}]: El usuario solicita: '{user_prompt}'. Necesito consultar el expediente técnico del atleta para revisar condiciones de salud y rutina actual."
-                action_name = "get_athlete_technical_file"
-                action_input = athlete_id if athlete_id else "user123"
-            elif iteration == 2:
-                last_obs = steps[-1]["observation"]
-                health_cond = last_obs.get("health_conditions", "Ninguna")
-                if health_cond != "Ninguna":
-                    current_thought = f"PENSAMIENTO [{iteration}]: El atleta presenta '{health_cond}'. Debo consultar la herramienta de contraindicaciones médicas para identificar ejercicios prohibidos y sustitutos seguros."
-                    action_name = "search_medical_contraindications"
-                    action_input = health_cond
-                else:
-                    current_thought = f"PENSAMIENTO [{iteration}]: No se registran lesiones médicas. Consultaré la base RAG para optimizar la rutina de hipertrofia."
-                    action_name = "query_rag_vector_store"
-                    action_input = user_prompt
-            elif iteration == 3:
-                current_thought = f"PENSAMIENTO [{iteration}]: Con la información biomecánica obtenida, calcularé el ajuste de sobrecarga progresiva."
-                action_name = "calculate_progressive_overload"
-                action_input = {"sets": 4, "reps": 10, "weight_kg": 80.0}
+            current_thought = ""
+            action_name = ""
+            action_input: Any = None
+
+            # Si se fuerza la repetición para prueba explícita de bucle
+            if force_repeat_action:
+                action_name = force_repeat_action
+                action_input = {"muscle_group": "Pecho"} if action_name == "get_exercise_alternative" else {"user_id": athlete_id}
+                current_thought = f"PENSAMIENTO [{iteration}]: Ejecutando herramienta de prueba '{action_name}'."
             else:
-                current_thought = f"PENSAMIENTO [{iteration}]: Dispongo de toda la evidencia necesaria (Ficha Técnica, Contraindicaciones Biomecánicas y Sobrecarga). Procederé a sintetizar la respuesta final."
+                # Detección dinámica basada en la intencionalidad del mensaje y observaciones previas
+                if iteration == 1:
+                    if any(k in msg_lower for k in ["macro", "calor", "nutri", "dieta", "comer"]):
+                        current_thought = f"PENSAMIENTO [{iteration}]: El usuario consulta sobre nutrición y macronutrientes. Usaré calculate_nutrition_macros."
+                        action_name = "calculate_nutrition_macros"
+                        action_input = {"user_id": athlete_id}
+                    elif any(k in msg_lower for k in ["alternativa", "reemplaz", "cambiar", "ocupad", "sustitui"]):
+                        muscle = "Pecho" if "pecho" in msg_lower else ("Espalda" if "espalda" in msg_lower else "Pecho")
+                        current_thought = f"PENSAMIENTO [{iteration}]: El usuario busca sustitutos de ejercicio. Usaré get_exercise_alternative para {muscle}."
+                        action_name = "get_exercise_alternative"
+                        action_input = {"muscle_group": muscle}
+                    elif any(k in msg_lower for k in ["periodización", "periodizacion", "hipertrofia", "ciencia", "evidencia"]):
+                        current_thought = f"PENSAMIENTO [{iteration}]: El usuario requiere evidencia científica RAG. Consultaré la base de conocimiento con retrieve_rag_knowledge."
+                        action_name = "retrieve_rag_knowledge"
+                        action_input = {"query_text": user_prompt}
+                    else:
+                        current_thought = f"PENSAMIENTO [{iteration}]: El usuario reporta dolor o consulta de seguridad. Usaré assess_injury_risk para evaluar el perfil del atleta."
+                        action_name = "assess_injury_risk"
+                        action_input = {"user_id": athlete_id, "exercise_name": "Sentadilla con Barra"}
+
+                elif iteration == 2:
+                    last_action = steps[-1]["action"] if steps else ""
+                    if last_action == "assess_injury_risk":
+                        current_thought = f"PENSAMIENTO [{iteration}]: Tras evaluar el riesgo biomecánico, buscaré alternativas seguras en el catálogo."
+                        action_name = "get_exercise_alternative"
+                        action_input = {"muscle_group": "Pecho"}
+                    elif last_action == "get_exercise_alternative":
+                        current_thought = f"PENSAMIENTO [{iteration}]: Consultaré la evidencia RAG para respaldar la sustitución de ejercicios."
+                        action_name = "retrieve_rag_knowledge"
+                        action_input = {"query_text": f"sustitución ejercicio {user_prompt}"}
+                    else:
+                        current_thought = f"PENSAMIENTO [{iteration}]: Dispongo de la información necesaria para responder al usuario."
+                        action_name = "FINAL_ANSWER"
+                        action_input = None
+
+                else:
+                    current_thought = f"PENSAMIENTO [{iteration}]: Secuencia de razonamiento ReAct completada. Sintetizando respuesta final."
+                    action_name = "FINAL_ANSWER"
+                    action_input = None
+
+            # Verificación de bucle repetitivo (anti-loop protection)
+            tool_signature = f"{action_name}:{json.dumps(action_input, sort_keys=True)}"
+            if tool_signature in executed_tool_calls and action_name != "FINAL_ANSWER":
+                loop_detected = True
+                current_thought += " (Detección de ciclo duplicado: la herramienta ya fue ejecutada previamente. Forzando respuesta final para prevenir bucle infinito)."
                 action_name = "FINAL_ANSWER"
                 action_input = None
 
-            tool_call_signature = f"{action_name}:{json.dumps(action_input)}"
-            if tool_call_signature in executed_tool_calls and action_name != "FINAL_ANSWER":
-                current_thought += " (Detección de ciclo duplicado: forzando respuesta final)."
-                action_name = "FINAL_ANSWER"
-
-            executed_tool_calls.add(tool_call_signature)
+            executed_tool_calls.add(tool_signature)
 
             if action_name == "FINAL_ANSWER":
                 final_answer = self._synthesize_final_answer(user_prompt, steps)
@@ -144,16 +118,11 @@ class ReActAgent:
                     "iteration": iteration,
                     "thought": current_thought,
                     "action": "FINAL_ANSWER",
-                    "observation": "Flujo de razonamiento ReAct completado con éxito."
+                    "observation": "Flujo ReAct finalizado."
                 })
                 break
             else:
-                tool_fn = self.tool_registry.get(action_name)
-                if isinstance(action_input, dict):
-                    observation = tool_fn(**action_input)
-                else:
-                    observation = tool_fn(action_input)
-
+                observation = self.tool_registry.execute_tool(action_name, **(action_input if isinstance(action_input, dict) else {}))
                 steps.append({
                     "iteration": iteration,
                     "thought": current_thought,
@@ -165,30 +134,23 @@ class ReActAgent:
         return {
             "user_prompt": user_prompt,
             "total_iterations": len(steps),
+            "loop_detected": loop_detected,
             "steps": steps,
             "final_answer": final_answer
         }
 
     def _synthesize_final_answer(self, prompt: str, steps: List[Dict[str, Any]]) -> str:
-        athlete_info = {}
-        contraindications = {}
+        observations_summary = []
         for s in steps:
-            if s["action"] == "get_athlete_technical_file":
-                athlete_info = s["observation"]
-            elif s["action"] == "search_medical_contraindications":
-                contraindications = s["observation"]
+            if s["action"] != "FINAL_ANSWER":
+                obs_json = json.dumps(s["observation"], ensure_ascii=False)
+                observations_summary.append(f"- Herramienta {s['action']}: {obs_json}")
 
-        name = athlete_info.get("name", "Atleta")
-        cond = athlete_info.get("health_conditions", "Sin lesiones")
-        contra_ex = contraindications.get("contraindicated_exercises", [])
-        subs = contraindications.get("recommended_substitutes", [])
+        obs_str = "\n".join(observations_summary) if observations_summary else "Sin herramientas ejecutadas."
+        return (
+            f"**Síntesis ReAct ReActAgent**\n"
+            f"Consulta: '{prompt}'\n\n"
+            f"Evidencia de Herramientas Ejecutadas:\n{obs_str}\n\n"
+            f"Recomendación: Plan ajustado respetando los datos obtenidos."
+        )
 
-        if contra_ex:
-            return (
-                f"**Plan Adaptado para {name} (Condición: {cond})**\n\n"
-                f"1. **Análisis Biomecánico**: Se detectó {cond}. Por seguridad articular, quedan **contraindicados**: {', '.join(contra_ex)}.\n"
-                f"2. **Ejercicios Sustitutos Recomendados**: Reemplazar por {', '.join(subs)}.\n"
-                f"3. **Sobrecarga Progresiva**: Aplicar incremento del 5% manteniendo RPE 8 en la prensa inclinada."
-            )
-        else:
-            return f"Plan de entrenamiento optimizado para {name}: Rutina aprobada con sobrecarga progresiva estándar."
