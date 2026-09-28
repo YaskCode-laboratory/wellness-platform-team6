@@ -164,7 +164,6 @@ class ReasoningEngine:
         fitness = profile.get("fitness_profile", {})
         personal = profile.get("personal_info", {})
         metrics = profile.get("physical_metrics", {})
-        nutrition = profile.get("nutrition_profile", {})
 
         name = personal.get("name", "Atleta")
         weight = metrics.get("weight", 70)
