@@ -64,7 +64,11 @@ class ReActAgent:
             else:
                 # Detección dinámica basada en la intencionalidad del mensaje y observaciones previas
                 if iteration == 1:
-                    if any(k in msg_lower for k in ["macro", "calor", "nutri", "dieta", "comer"]):
+                    if any(k in msg_lower for k in ["hola", "buenos días", "gracias", "saludos", "buenas"]):
+                        current_thought = f"PENSAMIENTO [{iteration}]: El usuario envía un saludo o agradecimiento directo. Generando respuesta sin herramientas."
+                        action_name = "FINAL_ANSWER"
+                        action_input = None
+                    elif any(k in msg_lower for k in ["macro", "calor", "nutri", "dieta", "comer"]):
                         current_thought = f"PENSAMIENTO [{iteration}]: El usuario consulta sobre nutrición y macronutrientes. Usaré calculate_nutrition_macros."
                         action_name = "calculate_nutrition_macros"
                         action_input = {"user_id": athlete_id}
