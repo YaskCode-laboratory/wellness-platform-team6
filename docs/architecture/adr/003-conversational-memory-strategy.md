@@ -15,7 +15,7 @@ En agentes de asistencia deportiva como el Wellness Coach Agent 2.0, los usuario
 Se adoptó una arquitectura de **Memoria Conversacional de Doble Nivel** coordinada por `ConversationMemoryManager`:
 
 1. **Buffer a Corto Plazo (Short-Term Memory)**: Mantiene una ventana deslizante de los últimos 10 turnos de conversación para inyección directa en el prompt del LLM.
-2. **Persistencia a Largo Plazo (Long-Term Persistence)**: Guarda en JSON local (`data/memory/{user_id}_memory.json`) y Firestore el historial completo.
+2. **Persistencia a Largo Plazo (Long-Term Persistence)**: Guarda en JSON local (`data/memory/{user_id}_memory.json`) el historial completo sin truncar y los hechos extraídos, con diseño extensible hacia Google Cloud Firestore para entornos multinodo.
 3. **Extracción Automática de Hechos (Fact Extraction)**: Analiza el texto del usuario para identificar condiciones de salud o marcas de peso y almacenarlas de forma estructurada.
 
 ### Consecuencias

@@ -31,9 +31,11 @@ class ConversationMemoryManager:
         self._extracted_facts: Dict[str, List[str]] = {}
 
     def add_message(self, user_id: str, role: str, content: str, timestamp: Optional[str] = None) -> None:
-        """Agrega un mensaje (user o assistant) al historial del usuario y analiza hechos clave."""
+        """Agrega un mensaje (user o assistant) al historial del usuario, cargando persistencia si es nueva sesión."""
         if user_id not in self._memory_store:
-            self._memory_store[user_id] = []
+            loaded = self.load_from_persistence(user_id)
+            if not loaded:
+                self._memory_store[user_id] = []
 
         message_obj = {
             "role": role,
@@ -46,10 +48,7 @@ class ConversationMemoryManager:
         if role == "user":
             self.extract_and_save_facts(user_id, content)
 
-        # Truncamiento de ventana para el buffer de memoria a corto plazo
-        if len(self._memory_store[user_id]) > (self.max_history_turns * 2):
-            self._memory_store[user_id] = self._memory_store[user_id][-(self.max_history_turns * 2):]
-
+        # Se guarda la totalidad del historial en memoria de largo plazo (JSON)
         self.save_to_persistence(user_id)
 
     def extract_and_save_facts(self, user_id: str, message: str) -> List[str]:
@@ -81,17 +80,33 @@ class ConversationMemoryManager:
         return self._extracted_facts[user_id]
 
     def get_history(self, user_id: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
-        """Retorna el historial de conversación del usuario. Si no está en memoria, intenta cargar de disco."""
+        """
+        Retorna el historial de conversación del usuario recortado al buffer de corto plazo.
+        Si no está en memoria local, carga desde la persistencia JSON.
+        """
         if user_id not in self._memory_store:
             self.load_from_persistence(user_id)
 
-        history = self._memory_store.get(user_id, [])
+        full_history = self._memory_store.get(user_id, [])
         if limit and limit > 0:
-            return history[-limit:]
-        return history
+            return full_history[-limit:]
+
+        # Por defecto retorna la ventana del buffer a corto plazo (max_history_turns * 2)
+        buffer_limit = self.max_history_turns * 2
+        if len(full_history) > buffer_limit:
+            return full_history[-buffer_limit:]
+        return full_history
+
+    def get_full_history(self, user_id: str) -> List[Dict[str, Any]]:
+        """Retorna el historial completo de largo plazo sin recortar."""
+        if user_id not in self._memory_store:
+            self.load_from_persistence(user_id)
+        return self._memory_store.get(user_id, [])
 
     def get_extracted_facts(self, user_id: str) -> List[str]:
         """Retorna la lista de hechos clave extraídos de las conversaciones del usuario."""
+        if user_id not in self._extracted_facts:
+            self.load_from_persistence(user_id)
         return self._extracted_facts.get(user_id, [])
 
     def get_formatted_history(self, user_id: str, limit: Optional[int] = None) -> str:
@@ -108,7 +123,7 @@ class ConversationMemoryManager:
         return "\n".join(formatted_lines)
 
     def save_to_persistence(self, user_id: str) -> None:
-        """Persiste el historial de conversación y los hechos extraídos en archivo JSON."""
+        """Persiste el historial completo de conversación y los hechos extraídos en archivo JSON."""
         file_path = self.storage_dir / f"{user_id}_memory.json"
         data = {
             "user_id": user_id,
@@ -122,7 +137,7 @@ class ConversationMemoryManager:
             logger.warning(f"Error guardando memoria persistente para {user_id}: {e}")
 
     def load_from_persistence(self, user_id: str) -> bool:
-        """Carga el historial y los hechos extraídos desde el almacenamiento persistente."""
+        """Carga el historial completo y los hechos extraídos desde el almacenamiento persistente."""
         file_path = self.storage_dir / f"{user_id}_memory.json"
         if not file_path.exists():
             return False
@@ -139,7 +154,7 @@ class ConversationMemoryManager:
             return False
 
     def clear_memory(self, user_id: str) -> None:
-        """Limpia el buffer de memoria a corto plazo y la persistencia del usuario."""
+        """Limpia el buffer de memoria y la persistencia del usuario."""
         if user_id in self._memory_store:
             del self._memory_store[user_id]
         if user_id in self._extracted_facts:
@@ -151,3 +166,4 @@ class ConversationMemoryManager:
                 file_path.unlink()
             except Exception as e:
                 logger.warning(f"Error eliminando archivo de memoria para {user_id}: {e}")
+

@@ -35,7 +35,7 @@ Para asegurar que el **Wellness Coach Agent 2.0** mantenga la coherencia en diá
 ```
 
 1. **Memoria a Corto Plazo (Short-Term Memory Buffer)**: Mantiene los mensajes más recientes (por defecto 10 turnos pares de diálogo `user` / `assistant`). Se inyecta directamente en el prompt para mantener la fluidez de la conversación actual.
-2. **Memoria a Largo Plazo (Long-Term Memory Persistence & Fact Extraction)**: Almacena en disco (`data/memory/{user_id}_memory.json`) y Firestore la totalidad del historial y los **Hechos Extraídos** (ej. reporte espontáneo de dolor lumbar o récords de levantamiento).
+2. **Memoria a Largo Plazo (Long-Term Memory Persistence & Fact Extraction)**: Almacena en archivos JSON locales (`data/memory/{user_id}_memory.json`) la totalidad del historial de conversación sin truncar y los **Hechos Extraídos** (ej. reporte espontáneo de dolor lumbar o récords de levantamiento). La arquitectura está diseñada para permitir la extensión a Google Cloud Firestore en entornos de producción distribuidos.
 
 ---
 
