@@ -61,5 +61,24 @@ class TestReActAgent(unittest.TestCase):
         thoughts_str = " ".join([s["thought"] for s in result["steps"]])
         self.assertIn("ciclo duplicado", thoughts_str.lower())
 
+    def test_end_to_end_agent_react_loop_integration(self):
+        """
+        Verifica la integración end-to-end sobre el flujo principal del agente:
+        mensaje -> Thought -> Action -> Tool -> Observation -> nueva decisión -> Final Answer.
+        """
+        from app import agent
+        user_id = "test_react_e2e_user"
+        prompt = "Calcula mis macronutrientes y calorías"
+
+        response = agent.generate_chat_response(user_id, prompt)
+        self.assertIsInstance(response, str)
+        self.assertTrue(len(response) > 0)
+        self.assertIn("Síntesis ReAct", response)
+
+        # Verificar que la memoria conversacional haya registrado la interacción
+        history = agent.memory_manager.get_history(user_id)
+        self.assertGreaterEqual(len(history), 2)
+        self.assertEqual(history[0]["content"], prompt)
+
 if __name__ == "__main__":
     unittest.main()
