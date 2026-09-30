@@ -25,7 +25,7 @@
       "category": "Multi-turn Conversation & Fact Retention",
       "prompt": "Hola, sufro de hernia discal lumbar L4-L5. -> ¿Qué ejercicios de piernas puedo hacer hoy? -> ¿La sentadilla libre con barra es recomendable para mi rutina?",
       "expected_behavior": "Retener la patología de Hernia L4-L5 en el Turno 1 y verificar en el Turno 3 que la información previa prohíbe la sentadilla con barra libre.",
-      "obtained_behavior": "Memoria multiturno verificada (6 mensajes almacenados). Hecho de Turno 1 ('hernia/lumbar') retenido en ConversationMemoryManager e influyó en la respuesta conversacional del Turno 3.",
+      "obtained_behavior": "Memoria multiturno verificada (6 mensajes almacenados). Hecho de Turno 1 ('hernia/lumbar') recuperado de ConversationMemoryManager. Turno 3 evaluó riesgo ALTO (HIGH) contraindicando la sentadilla libre con barra e introdujo una alternativa segura para Piernas.",
       "executed_tools": [
         "assess_injury_risk",
         "get_exercise_alternative",
@@ -34,7 +34,7 @@
       "tool_accuracy_passed": true,
       "relevance_score": 5.0,
       "iterations_used": 3,
-      "final_answer": "Turno 3: **Síntesis ReAct ReActAgent**\nConsulta: '¿La sentadilla libre con barra es recomendable para mi rutina?'\n\nEvidencia de Herramientas Ejecutadas:\n- Herramienta assess_injury_risk: {\"risk_level\": \"LOW\", \"warning\": \"Sin contraindicación directa registrada.\", \"safe_recommendation\": \"Ejecutar con técnica neutra y rango de movimiento controlado.\"}\n- Herramienta get_exercise_alternative: {\"status\": \"success\", \"muscle_group\": \"Pecho\", \"exercise_id\": \"bench_press\", \"name\": \"Press de Banca Plano con Barra\"}\n\nRecomendación: Plan ajustado respetando los datos obtenidos.",
+      "final_answer": "Turno 3: **Síntesis ReAct ReActAgent**\nConsulta: '¿La sentadilla libre con barra es recomendable para mi rutina?'\n\nEvidencia de Herramientas Ejecutadas:\n- Herramienta assess_injury_risk: {\"status\": \"success\", \"risk_level\": \"HIGH\", \"warning\": \"Ejercicio de alta compresión axial contraindicado por patología/hernia lumbar.\", \"safe_recommendation\": \"Sustituir por Prensa Inclinada a 45° con apoyo lumbar o Extensión de Rodilla.\"}\n- Herramienta get_exercise_alternative: {\"status\": \"success\", \"muscle_group\": \"Piernas\", \"exercise_id\": \"leg_press\", \"name\": \"Prensa de Piernas\"}\n\nRecomendación: Plan ajustado respetando los datos obtenidos.",
       "status": "PASSED"
     },
     {
@@ -51,7 +51,7 @@
       "tool_accuracy_passed": true,
       "relevance_score": 5.0,
       "iterations_used": 3,
-      "final_answer": "**Síntesis ReAct ReActAgent**\nConsulta: 'Tengo molestias en la espalda baja, evalúa el riesgo y sugiere sustitutos de ejercicio.'\n\nEvidencia de Herramientas Ejecutadas:\n- Herramienta assess_injury_risk: {\"risk_level\": \"LOW\", \"warning\": \"Sin contraindicación directa registrada.\", \"safe_recommendation\": \"Ejecutar con técnica neutra y rango de movimiento controlado.\"}\n- Herramienta get_exercise_alternative: {\"status\": \"success\", \"muscle_group\": \"Pecho\", \"exercise_id\": \"dumbbell_press\", \"name\": \"Press Inclinado con Mancuernas\"}\n\nRecomendación: Plan ajustado respetando los datos obtenidos.",
+      "final_answer": "**Síntesis ReAct ReActAgent**\nConsulta: 'Tengo molestias en la espalda baja, evalúa el riesgo y sugiere sustitutos de ejercicio.'\n\nEvidencia de Herramientas Ejecutadas:\n- Herramienta assess_injury_risk: {\"status\": \"success\", \"risk_level\": \"LOW\", \"warning\": \"Sin contraindicación directa registrada.\", \"safe_recommendation\": \"Ejecutar con técnica neutra y rango de movimiento controlado.\"}\n- Herramienta get_exercise_alternative: {\"status\": \"success\", \"muscle_group\": \"Espalda\", \"exercise_id\": \"barbell_row\", \"name\": \"Remo con Barra\"}\n\nRecomendación: Plan ajustado respetando los datos obtenidos.",
       "status": "PASSED"
     },
     {
@@ -67,7 +67,7 @@
       "tool_accuracy_passed": true,
       "relevance_score": 5.0,
       "iterations_used": 2,
-      "final_answer": "**Síntesis ReAct ReActAgent**\nConsulta: 'Calcula mis macronutrientes y calorías para entrenamiento'\n\nEvidencia de Herramientas Ejecutadas:\n- Herramienta calculate_nutrition_macros: {\"user_id\": \"eval_user_tc-04\", \"tdee\": 0, \"protein\": 0, \"carbs\": 0, \"fats\": 0}\n\nRecomendación: Plan ajustado respetando los datos obtenidos.",
+      "final_answer": "**Síntesis ReAct ReActAgent**\nConsulta: 'Calcula mis macronutrientes y calorías para entrenamiento'\n\nEvidencia de Herramientas Ejecutadas:\n- Herramienta calculate_nutrition_macros: {\"status\": \"success\", \"user_id\": \"eval_user_tc-04\", \"tdee\": 0, \"protein\": 0, \"carbs\": 0, \"fats\": 0}\n\nRecomendación: Plan ajustado respetando los datos obtenidos.",
       "status": "PASSED"
     },
     {

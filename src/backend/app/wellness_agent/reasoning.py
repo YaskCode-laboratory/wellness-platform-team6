@@ -1,6 +1,6 @@
 """
 Módulo de Razonamiento y Construcción de Prompts (ReasoningEngine).
-Orquesta la integración con RAG, construye los mensajes del sistema y aplica reglas deterministas de seguridad.
+Orquesta la integración con RAG, la memoria de datos extraídos y construye mensajes del sistema.
 """
 
 import json
@@ -23,8 +23,41 @@ class ReasoningEngine:
     def __init__(self, tool_registry: Optional[AgentToolRegistry] = None):
         self.tools = tool_registry or AgentToolRegistry()
 
-    def build_routine_prompt(self, user_id: str) -> str:
-        """Construye el prompt estructurado para la generación de rutinas."""
+    def detect_and_execute_tools(self, user_id: str, message: str) -> tuple[Optional[str], Any]:
+        """
+        Analiza la intencionalidad del mensaje y ejecuta dinámicamente la herramienta correspondiente.
+        Retorna (tool_name, tool_result) o (None, None) si no requiere invocación de herramientas.
+        """
+        msg = message.lower().strip()
+
+        # 1. Alternativas de ejercicio
+        if any(k in msg for k in ["alternativa", "reemplaz", "cambiar", "ocupad", "sustitui"]):
+            for group in EXERCISE_CATALOG.keys():
+                if group.lower() in msg or (group == "Pecho" and "banca" in msg) or (group == "Piernas" and "sentadilla" in msg) or (group == "Espalda" and "espalda" in msg):
+                    res = self.tools.execute_tool("get_exercise_alternative", muscle_group=group)
+                    return ("get_exercise_alternative", res)
+            res = self.tools.execute_tool("get_exercise_alternative", muscle_group="Pecho")
+            return ("get_exercise_alternative", res)
+
+        # 2. Nutrición y macronutrientes
+        if any(k in msg for k in ["macro", "calor", "nutri", "proteín", "protein", "dieta", "comer"]):
+            res = self.tools.execute_tool("calculate_nutrition_macros", user_id=user_id)
+            return ("calculate_nutrition_macros", res)
+
+        # 3. Evaluación de riesgo de lesión
+        if any(k in msg for k in ["duele", "dolor", "lesion", "lesión", "molest"]):
+            res = self.tools.execute_tool("assess_injury_risk", user_id=user_id, exercise_name="Sentadilla con Barra")
+            return ("assess_injury_risk", res)
+
+        # 4. RAG Knowledge
+        if any(k in msg for k in ["periodización", "periodizacion", "hipertrofia", "ciencia", "evidencia", "estudio"]):
+            res = self.tools.execute_tool("retrieve_rag_knowledge", query_text=message)
+            return ("retrieve_rag_knowledge", res)
+
+        return (None, None)
+
+    def build_routine_prompt(self, user_id: str, extracted_facts: Optional[List[str]] = None) -> str:
+        """Construye el prompt estructurado para la generación de rutinas enriquecido con hechos conversacionales."""
         profile = database.get_user_profile(user_id)
         fitness = profile.get("fitness_profile", {})
         personal = profile.get("personal_info", {})
@@ -37,6 +70,8 @@ class ReasoningEngine:
         weight = metrics.get("weight", 70)
         health_conditions = fitness.get("health_conditions", [])
         limitations = fitness.get("limitations", "Ninguna")
+
+        facts_text = "\n".join(extracted_facts) if extracted_facts else "Sin hechos adicionales extraídos del chat."
 
         # RAG Context Augmentation
         rag_context_blocks = self.tools.retrieve_rag_knowledge(
@@ -52,14 +87,16 @@ class ReasoningEngine:
         Perfil del atleta:
         - Objetivo: {goal} | Nivel: {level}
         - Edad: {age} años | Peso: {weight} kg
-        - CONDICIONES DE SALUD O LESIONES: {', '.join(health_conditions) if health_conditions else 'Ninguna'}
+        - CONDICIONES DE SALUD O LESIONES REGISTRADAS: {', '.join(health_conditions) if health_conditions else 'Ninguna'}
         - LIMITACIONES FÍSICAS: {limitations}
+        - HECHOS EXTRAÍDOS DE MEMORIA CONVERSACIONAL:
+        {facts_text}
         
         CONTEXTO DE CONOCIMIENTO CIENTÍFICO RAG:
         {rag_text}
         
         REGLAS DE SEGURIDAD BIOMECÁNICA E IMPRESCINDIBLES:
-        1. Si padece Hernia Discal, NO incluyas Sentadilla con Barra libre ni Peso Muerto pesado. Reemplaza por Prensa de Pierna con apoyo lumbar o Sentadilla Goblet ligera.
+        1. Si padece Hernia Discal o molestia lumbar, NO incluyas Sentadilla con Barra libre ni Peso Muerto pesado. Reemplaza por Prensa de Pierna con apoyo lumbar o Sentadilla Goblet ligera.
         2. Si padece Lesión de Rodilla, evita flexiones profundas con alto impacto.
         3. Diseña ejercicios biomecánicamente seguros y efectivos.
         
@@ -77,8 +114,8 @@ class ReasoningEngine:
         }}
         """
 
-    def generate_local_routine(self, user_id: str) -> Dict[str, Any]:
-        """Genera una rutina semanal basada en el motor determinista local."""
+    def generate_local_routine(self, user_id: str, extracted_facts: Optional[List[str]] = None) -> Dict[str, Any]:
+        """Genera una rutina semanal basada en el motor determinista local y memoria de hechos."""
         profile = database.get_user_profile(user_id)
         fitness = profile.get("fitness_profile", {})
         personal = profile.get("personal_info", {})
@@ -88,6 +125,14 @@ class ReasoningEngine:
         goal = fitness.get("goal", "hipertrofia")
         age = personal.get("age", 25)
         health_conditions = [h.lower() for h in fitness.get("health_conditions", [])]
+        
+        if extracted_facts:
+            for fact in extracted_facts:
+                if "lumbar" in fact.lower() or "hernia" in fact.lower():
+                    health_conditions.append("hernia discal")
+                if "rodilla" in fact.lower():
+                    health_conditions.append("lesión de rodilla")
+
         has_lumbar_issue = any("hernia" in h or "lumbar" in h for h in health_conditions)
 
         num_days = len(training_days)
@@ -140,22 +185,20 @@ class ReasoningEngine:
 
         goal_labels = {"hipertrofia": "Hipertrofia", "fuerza": "Fuerza Máxima", "definicion": "Definición Corporal"}
         level_labels = {"basico": "Principiante", "intermedio": "Intermedio", "avanzado": "Avanzado"}
-        health_note = " (Adaptada a Salud)" if health_conditions else ""
+        health_note = " (Adaptada a Salud/Memoria)" if health_conditions else ""
         focus = f"{goal_labels.get(goal, goal)} — Nivel {level_labels.get(level, level)} — {num_days} días/semana{health_note}"
 
         return {"focus": focus, "weekly_schedule": schedule}
 
-    def generate_local_chat_response(self, user_id: str, message: str) -> str:
-        """Responde la consulta del usuario analizando perfil, reglas e intenciones."""
+    def generate_local_chat_response(self, user_id: str, message: str, extracted_facts: Optional[List[str]] = None) -> str:
+        """Responde la consulta del usuario analizando perfil, reglas, intenciones y memoria de hechos."""
         msg = message.lower().strip()
         profile = database.get_user_profile(user_id)
         fitness = profile.get("fitness_profile", {})
         personal = profile.get("personal_info", {})
         metrics = profile.get("physical_metrics", {})
-        nutrition = profile.get("nutrition_profile", {})
 
         name = personal.get("name", "Atleta")
-        age = personal.get("age", 25)
         weight = metrics.get("weight", 70)
         level = fitness.get("level", "basico")
         goal = fitness.get("goal", "hipertrofia")
@@ -222,9 +265,13 @@ class ReasoningEngine:
                 f"- Esquema: {sets} series x {reps} repeticiones"
             )
 
-        # 6. Saludo General
+        # 6. Saludo / Contexto Recordado
+        facts_summary = ""
+        if extracted_facts:
+            facts_summary = f"\n\nTengo registradas estas observaciones de conversaciones anteriores:\n- " + "\n- ".join(extracted_facts)
+
         return (
             f"Hola {name}, soy tu Wellness Coach inteligente.\n"
-            f"Puedo ayudarte con alternativas de ejercicios, progresión de cargas, nutrición y alertas de seguridad.\n"
+            f"Puedo ayudarte con alternativas de ejercicios, progresión de cargas, nutrición y alertas de seguridad.{facts_summary}\n\n"
             f"¿En qué te puedo ayudar hoy?"
         )

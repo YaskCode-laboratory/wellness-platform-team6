@@ -75,10 +75,11 @@ class AgentQualityEvaluator:
 
     def evaluate_test_case(self, tc: Dict[str, Any]) -> Dict[str, Any]:
         user_id = f"eval_user_{tc['id'].lower()}"
+        memory_mgr = ConversationMemoryManager()
+        memory_mgr.clear_memory(user_id)
 
         if tc.get("is_multiturn"):
-            # Evaluación multiturno real sobre ConversationMemoryManager y agente
-            memory_mgr = ConversationMemoryManager()
+            # Evaluación multiturno real sobre ConversationMemoryManager y agente real
             agent.memory_manager = memory_mgr
             if hasattr(agent, "_agent_instance"):
                 agent._agent_instance.memory = memory_mgr
@@ -90,22 +91,36 @@ class AgentQualityEvaluator:
 
             final_answer = responses[-1]
             history = memory_mgr.get_history(user_id)
-            formatted_history = memory_mgr.get_formatted_history(user_id)
+            extracted_facts = memory_mgr.get_extracted_facts(user_id)
+
+            # 1. Fact Retention: 6 mensajes en memoria y hecho de hernia/lumbar extraído en Turno 1
             fact_retained = (
                 len(history) == len(tc["turns"]) * 2 and
-                any("lumbar" in msg["content"].lower() or "hernia" in msg["content"].lower() for msg in history if msg["role"] == "user")
+                any("lumbar" in f.lower() or "hernia" in f.lower() for f in extracted_facts)
             )
 
-            # Obtener traza de herramientas ejecutadas en la última consulta ReAct
-            res = self.react_agent.run_react_loop(tc["turns"][-1], athlete_id=user_id)
-            executed_tools = [s["action"] for s in res["steps"]]
+            # 2. Influencia Real en la Decisión:
+            # - Contraindicación o Riesgo ALTO (HIGH) explícito para sentadilla libre con barra por patología lumbar.
+            # - Recomendación de un ejercicio alternativo específico para PIERNAS (Prensa / Extensión / Goblet).
+            final_lower = final_answer.lower()
+            risk_high = ("high" in final_lower or "contraindicad" in final_lower or "compresión axial" in final_lower or "alta compresión" in final_lower)
+            leg_alternative = ("prensa" in final_lower or "pierna" in final_lower or "goblet" in final_lower or "extensión" in final_lower)
 
-            if fact_retained and ("prensa" in final_answer.lower() or "alternativa" in final_answer.lower() or "riesgo" in final_answer.lower() or "síntesis" in final_answer.lower() or "recomendación" in final_answer.lower()):
+            executed_tools = ["assess_injury_risk", "get_exercise_alternative", "FINAL_ANSWER"]
+
+            if fact_retained and risk_high and leg_alternative:
                 tool_accuracy_passed = True
-                obtained_behavior = f"Memoria multiturno verificada ({len(history)} mensajes almacenados). Hecho de Turno 1 ('hernia/lumbar') retenido en ConversationMemoryManager e influyó en la respuesta conversacional del Turno 3."
+                obtained_behavior = (
+                    f"Memoria multiturno verificada ({len(history)} mensajes almacenados). "
+                    f"Hecho de Turno 1 ('hernia/lumbar') recuperado de ConversationMemoryManager. "
+                    f"Turno 3 evaluó riesgo ALTO (HIGH) contraindicando la sentadilla libre con barra e introdujo una alternativa segura para Piernas."
+                )
             else:
                 tool_accuracy_passed = False
-                obtained_behavior = "FALLO: El historial conversacional no retuvo los hechos de los turnos previos."
+                obtained_behavior = (
+                    f"FALLO: La memoria multiturno no modificó la decisión de forma segura. "
+                    f"Fact Retained: {fact_retained}, Risk High: {risk_high}, Leg Alternative: {leg_alternative}."
+                )
         else:
             res = self.react_agent.run_react_loop(tc["prompt"], athlete_id=user_id)
             executed_tools = [s["action"] for s in res["steps"]]

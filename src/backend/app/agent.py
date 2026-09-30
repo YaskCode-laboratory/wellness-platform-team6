@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 use_real_ai = True
 
-# Instancias del paquete modular wellness_agent y patrón ReAct
 provider_manager = LLMProviderManager()
 memory_manager = ConversationMemoryManager()
 tool_registry = AgentToolRegistry()
@@ -30,7 +29,7 @@ react_agent = ReActAgent(tool_registry=tool_registry)
 class WellnessCoachAgent:
     """
     Agente Orquestador Inteligente para Wellness Lift.
-    Integrado con memoria conversacional, registro de herramientas y motor de razonamiento ReAct.
+    Integrado con memoria conversacional de doble nivel, registro de herramientas y motor de razonamiento ReAct.
     """
 
     def __init__(self):
@@ -41,8 +40,9 @@ class WellnessCoachAgent:
         self.react = react_agent
 
     def generate_routine(self, user_id: str) -> Dict[str, Any]:
-        """Genera una rutina de entrenamiento semanal balanceada."""
-        prompt = self.reasoning.build_routine_prompt(user_id)
+        """Genera una rutina de entrenamiento semanal balanceada considerando historial y memoria."""
+        extracted_facts = self.memory.get_extracted_facts(user_id)
+        prompt = self.reasoning.build_routine_prompt(user_id, extracted_facts=extracted_facts)
         completion = self.providers.generate_completion(prompt, is_json=True)
 
         if completion:
@@ -61,7 +61,7 @@ class WellnessCoachAgent:
                 logger.warning(f"Error parseando JSON del proveedor LLM: {e}")
 
         logger.info(f"Usando motor local determinista para rutina de {user_id}")
-        return self.reasoning.generate_local_routine(user_id)
+        return self.reasoning.generate_local_routine(user_id, extracted_facts=extracted_facts)
 
     def generate_response(self, user_id: str, message: str) -> str:
         """Genera una respuesta en la conversación ejecutando el ciclo ReAct (Thought -> Action -> Observation -> Final Answer)."""
@@ -69,13 +69,18 @@ class WellnessCoachAgent:
         profile = database.get_user_profile(user_id)
         name = profile.get("personal_info", {}).get("name", "Atleta")
         history_text = self.memory.get_formatted_history(user_id)
+        extracted_facts = self.memory.get_extracted_facts(user_id)
+        facts_text = "\n".join(extracted_facts) if extracted_facts else "Sin hechos adicionales extraídos."
 
         prompt = f"""
         Eres Wellness AI, un asistente personal deportivo experto.
         Hablas con {name}.
         
-        HISTORIAL DE CONVERSACIÓN:
+        HISTORIAL DE CONVERSACIÓN (MEMORIA A CORTO PLAZO):
         {history_text}
+        
+        HECHOS Y OBSERVACIONES EXTRAÍDAS (MEMORIA A LARGO PLAZO):
+        {facts_text}
         
         MENSAJE ACTUAL DEL USUARIO:
         "{message}"
@@ -100,7 +105,6 @@ class WellnessCoachAgent:
         return response_text
 
 
-# Instancia singleton del agente para el backend
 _agent_instance = WellnessCoachAgent()
 
 
@@ -128,7 +132,7 @@ def get_groq_client() -> Optional[Any]:
 
 
 def _generate_local_routine(user_id: str) -> Dict[str, Any]:
-    return reasoning_engine.generate_local_routine(user_id)
+    return reasoning_engine.generate_local_routine(user_id, extracted_facts=memory_manager.get_extracted_facts(user_id))
 
 
 def generate_weekly_routine(user_id: str) -> Dict[str, Any]:
@@ -136,7 +140,7 @@ def generate_weekly_routine(user_id: str) -> Dict[str, Any]:
 
 
 def _generate_local_chat_response(user_id: str, message: str) -> str:
-    return reasoning_engine.generate_local_chat_response(user_id, message)
+    return reasoning_engine.generate_local_chat_response(user_id, message, extracted_facts=memory_manager.get_extracted_facts(user_id))
 
 
 def generate_chat_response(user_id: str, message: str) -> str:
