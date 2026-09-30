@@ -1,9 +1,9 @@
 {
   "total_test_cases": 5,
-  "passed_test_cases": 5,
-  "failed_test_cases": 0,
-  "overall_accuracy_pct": 100.0,
-  "average_relevance_score": 5.0,
+  "passed_test_cases": 4,
+  "failed_test_cases": 1,
+  "overall_accuracy_pct": 80.0,
+  "average_relevance_score": 4.5,
   "evaluations": [
     {
       "test_id": "TC-01",
@@ -24,18 +24,18 @@
       "test_id": "TC-02",
       "category": "Multi-turn Conversation & Fact Retention",
       "prompt": "Hola, sufro de hernia discal lumbar L4-L5. -> ¿Qué ejercicios de piernas puedo hacer hoy? -> ¿La sentadilla libre con barra es recomendable para mi rutina?",
-      "expected_behavior": "Retener la patología de Hernia L4-L5 en el Turno 1 y verificar en el Turno 3 que la información previa prohíbe la sentadilla con barra libre.",
-      "obtained_behavior": "Memoria multiturno verificada (6 mensajes almacenados). Hecho de Turno 1 ('hernia/lumbar') recuperado de ConversationMemoryManager. Turno 3 evaluó riesgo ALTO (HIGH) contraindicando la sentadilla libre con barra e introdujo una alternativa segura para Piernas.",
+      "expected_behavior": "Retener la patología de Hernia L4-L5 en Turno 1; en Turno 3 identificar riesgo HIGH contraindicando sentadilla libre y seleccionar alternativa para Piernas coherente y no contraindicada.",
+      "obtained_behavior": "INCONSISTENCIA DETECTADA: Alternativa inconsistente con la restricción: get_exercise_alternative seleccionó 'Sentadilla con Barra', la cual contradice la contraindicación de compresión axial lumbar identificada por assess_injury_risk. [Riesgo identificado: SÍ | Grupo muscular correcto: SÍ | Alternativa coherente con restricción: NO].",
       "executed_tools": [
         "assess_injury_risk",
         "get_exercise_alternative",
         "FINAL_ANSWER"
       ],
-      "tool_accuracy_passed": true,
-      "relevance_score": 5.0,
+      "tool_accuracy_passed": false,
+      "relevance_score": 2.5,
       "iterations_used": 3,
-      "final_answer": "Turno 3: **Síntesis ReAct ReActAgent**\nConsulta: '¿La sentadilla libre con barra es recomendable para mi rutina?'\n\nEvidencia de Herramientas Ejecutadas:\n- Herramienta assess_injury_risk: {\"status\": \"success\", \"risk_level\": \"HIGH\", \"warning\": \"Ejercicio de alta compresión axial contraindicado por patología/hernia lumbar.\", \"safe_recommendation\": \"Sustituir por Prensa Inclinada a 45° con apoyo lumbar o Extensión de Rodilla.\"}\n- Herramienta get_exercise_alternative: {\"status\": \"success\", \"muscle_group\": \"Piernas\", \"exercise_id\": \"leg_press\", \"name\": \"Prensa de Piernas\"}\n\nRecomendación: Plan ajustado respetando los datos obtenidos.",
-      "status": "PASSED"
+      "final_answer": "Turno 3: **Síntesis ReAct ReActAgent**\nConsulta: '¿La sentadilla libre con barra es recomendable para mi rutina?'\n\nEvidencia de Herramientas Ejecutadas:\n- Herramienta assess_injury_risk: {\"status\": \"success\", \"risk_level\": \"HIGH\", \"warning\": \"Ejercicio de alta compresión axial contraindicado por patología/hernia lumbar.\", \"safe_recommendation\": \"Sustituir por Prensa Inclinada a 45° con apoyo lumbar o Extensión de Rodilla.\"}\n- Herramienta get_exercise_alternative: {\"status\": \"success\", \"muscle_group\": \"Piernas\", \"exercise_id\": \"squat\", \"name\": \"Sentadilla con Barra\"}\n\nRecomendación: Plan ajustado respetando los datos obtenidos.",
+      "status": "FAILED"
     },
     {
       "test_id": "TC-03",
@@ -51,7 +51,7 @@
       "tool_accuracy_passed": true,
       "relevance_score": 5.0,
       "iterations_used": 3,
-      "final_answer": "**Síntesis ReAct ReActAgent**\nConsulta: 'Tengo molestias en la espalda baja, evalúa el riesgo y sugiere sustitutos de ejercicio.'\n\nEvidencia de Herramientas Ejecutadas:\n- Herramienta assess_injury_risk: {\"status\": \"success\", \"risk_level\": \"LOW\", \"warning\": \"Sin contraindicación directa registrada.\", \"safe_recommendation\": \"Ejecutar con técnica neutra y rango de movimiento controlado.\"}\n- Herramienta get_exercise_alternative: {\"status\": \"success\", \"muscle_group\": \"Espalda\", \"exercise_id\": \"barbell_row\", \"name\": \"Remo con Barra\"}\n\nRecomendación: Plan ajustado respetando los datos obtenidos.",
+      "final_answer": "**Síntesis ReAct ReActAgent**\nConsulta: 'Tengo molestias en la espalda baja, evalúa el riesgo y sugiere sustitutos de ejercicio.'\n\nEvidencia de Herramientas Ejecutadas:\n- Herramienta assess_injury_risk: {\"status\": \"success\", \"risk_level\": \"LOW\", \"warning\": \"Sin contraindicación directa registrada.\", \"safe_recommendation\": \"Ejecutar con técnica neutra y rango de movimiento controlado.\"}\n- Herramienta get_exercise_alternative: {\"status\": \"success\", \"muscle_group\": \"Espalda\", \"exercise_id\": \"dumbbell_row\", \"name\": \"Remo con Mancuerna a una Mano\"}\n\nRecomendación: Plan ajustado respetando los datos obtenidos.",
       "status": "PASSED"
     },
     {
@@ -88,10 +88,12 @@
     }
   ],
   "limitations_identified": [
+    "Selección estocástica de alternativas sin filtrado biomecánico: get_exercise_alternative selecciona aleatoriamente del catálogo por grupo muscular sin considerar contraindicaciones o patologías previas identificadas por assess_injury_risk (p. ej., sugiriendo sentadilla goblet a un usuario con hernia discal lumbar).",
     "Latencia acumulada al encadenar múltiples herramientas secuenciales en el ciclo ReAct.",
     "Inexistencia de persistencia episódica en base de datos multinodo NoSQL."
   ],
   "proposed_improvements": [
+    "Incorporar filtrado contextual de patologías en get_exercise_alternative o permitir el paso de restricciones biomecánicas al catálogo para excluir ejercicios contraindicados.",
     "Implementar caché de respuestas para consultas biomecánicas frecuentes.",
     "Integrar persistencia episódica en Google Cloud Firestore."
   ]

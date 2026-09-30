@@ -31,9 +31,9 @@ El agente ReAct reutiliza directamente la arquitectura de herramientas expuesta 
 
 | Nombre de Herramienta | Firma y Entradas | Propósito y Salida |
 | :--- | :--- | :--- |
-| `get_exercise_alternative` | `muscle_group: str` | Retorna un ejercicio sustituto seguro para el mismo grupo muscular. |
+| `get_exercise_alternative` | `muscle_group: str` | Retorna un ejercicio sustituto del catálogo para el grupo muscular especificado. |
 | `calculate_nutrition_macros` | `user_id: str` | Calcula el TDEE y desglose de macronutrientes recomendados. |
-| `assess_injury_risk` | `user_id, exercise_name` | Evalúa el riesgo biomecánico según las condiciones de salud del atleta. |
+| `assess_injury_risk` | `user_id, exercise_name` | Evalúa el riesgo biomecánico según las condiciones de salud y memoria del atleta. |
 | `retrieve_rag_knowledge` | `query_text: str, top_k=2` | Búsqueda semántica vectorial en la base de conocimiento RAG. |
 
 ---
@@ -50,7 +50,7 @@ self.memory.add_message(user_id, "assistant", response_text)
 ```
 
 1. **Recepción del Mensaje**: Se registra la entrada del usuario en `ConversationMemoryManager`.
-2. **Ciclo ReAct**: `ReActAgent.run_react_loop` ejecuta la secuencia `Thought -> Action -> Observation`.
+2. **Ciclo ReAct**: `ReActAgent.run_react_loop` ejecuta la secuencia `Thought -> Action -> Observation -> nueva decisión -> Final Answer`.
 3. **Síntesis y Persistencia**: La respuesta final sintetizada se guarda en la memoria episódica del usuario.
 
 ---
@@ -69,5 +69,4 @@ La suite de pruebas en `tests/test_react_agent.py` valida la selección dinámic
 
 ```bash
 pytest tests/test_react_agent.py -v
-# 5 passed
 ```

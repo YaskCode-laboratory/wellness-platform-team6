@@ -47,7 +47,7 @@ class AgentQualityEvaluator:
                     "¿Qué ejercicios de piernas puedo hacer hoy?",
                     "¿La sentadilla libre con barra es recomendable para mi rutina?"
                 ],
-                "expected_behavior": "Retener la patología de Hernia L4-L5 en el Turno 1 y verificar en el Turno 3 que la información previa prohíbe la sentadilla con barra libre.",
+                "expected_behavior": "Retener la patología de Hernia L4-L5 en Turno 1; en Turno 3 identificar riesgo HIGH contraindicando sentadilla libre y seleccionar alternativa para Piernas coherente y no contraindicada.",
                 "expected_tool_sequence": ["assess_injury_risk", "get_exercise_alternative"]
             },
             {
@@ -99,27 +99,84 @@ class AgentQualityEvaluator:
                 any("lumbar" in f.lower() or "hernia" in f.lower() for f in extracted_facts)
             )
 
-            # 2. Influencia Real en la Decisión:
-            # - Contraindicación o Riesgo ALTO (HIGH) explícito para sentadilla libre con barra por patología lumbar.
-            # - Recomendación de un ejercicio alternativo específico para PIERNAS (Prensa / Extensión / Goblet).
-            final_lower = final_answer.lower()
-            risk_high = ("high" in final_lower or "contraindicad" in final_lower or "compresión axial" in final_lower or "alta compresión" in final_lower)
-            leg_alternative = ("prensa" in final_lower or "pierna" in final_lower or "goblet" in final_lower or "extensión" in final_lower)
+            # 2. Validación de Influencia Real en la Decisión (Distinción explícita de criterios):
+            # A. Riesgo correctamente identificado: risk_level HIGH y contraindicación lumbar explícita.
+            # B. Grupo muscular correcto: Piernas.
+            # C. Alternativa coherente con la restricción detectada: debe ser biomecánicamente segura
+            #    (p. ej., Prensa de Piernas o Extensión) y NO una variante de sentadilla con carga axial
+            #    (como Sentadilla con Barra o Sentadilla Goblet), que contradiga la patología lumbar detectada.
+            assess_obs = {}
+            alt_obs = {}
+            for line in final_answer.split("\n"):
+                if "- Herramienta assess_injury_risk:" in line:
+                    json_part = line.split("- Herramienta assess_injury_risk:", 1)[1].strip()
+                    try:
+                        assess_obs = json.loads(json_part)
+                    except Exception:
+                        pass
+                elif "- Herramienta get_exercise_alternative:" in line:
+                    json_part = line.split("- Herramienta get_exercise_alternative:", 1)[1].strip()
+                    try:
+                        alt_obs = json.loads(json_part)
+                    except Exception:
+                        pass
+
+            # A. Riesgo correctamente identificado
+            risk_high = (
+                assess_obs.get("risk_level") == "HIGH" or
+                "contraindicad" in assess_obs.get("warning", "").lower()
+            )
+
+            # B. Grupo muscular correcto
+            target_muscle = alt_obs.get("muscle_group", "")
+            muscle_group_correct = (target_muscle.lower() == "piernas")
+
+            # C. Alternativa realmente coherente con la restricción detectada
+            alt_id = alt_obs.get("exercise_id", "").lower()
+            alt_name = alt_obs.get("name", "").lower()
+
+            # Variantes de sentadillas o con carga axial contradicen la contraindicación lumbar
+            is_contraindicated = (
+                "squat" in alt_id or
+                "sentadilla" in alt_name or
+                alt_id in ["squat", "goblet_squat"]
+            )
+            # Para ser coherente debe ser un ejercicio sin compresión axial con soporte (ej. prensa o extensión)
+            alternative_coherent = (not is_contraindicated) and (
+                "prensa" in alt_name or "extensión" in alt_name or alt_id == "leg_press"
+            )
 
             executed_tools = ["assess_injury_risk", "get_exercise_alternative", "FINAL_ANSWER"]
 
-            if fact_retained and risk_high and leg_alternative:
+            if fact_retained and risk_high and muscle_group_correct and alternative_coherent:
                 tool_accuracy_passed = True
                 obtained_behavior = (
-                    f"Memoria multiturno verificada ({len(history)} mensajes almacenados). "
-                    f"Hecho de Turno 1 ('hernia/lumbar') recuperado de ConversationMemoryManager. "
-                    f"Turno 3 evaluó riesgo ALTO (HIGH) contraindicando la sentadilla libre con barra e introdujo una alternativa segura para Piernas."
+                    f"Comportamiento Correcto: Memoria multiturno verificada ({len(history)} mensajes). "
+                    f"Hecho de Turno 1 ('hernia/lumbar') recuperado. "
+                    f"Riesgo identificado: ALTO (HIGH - contraindicación lumbar). "
+                    f"Grupo muscular: Piernas. "
+                    f"Alternativa coherente: '{alt_obs.get('name')}' (segura y sin compresión axial)."
                 )
             else:
                 tool_accuracy_passed = False
+                inconsistencies = []
+                if not fact_retained:
+                    inconsistencies.append("Hecho de hernia no retenido en memoria")
+                if not risk_high:
+                    inconsistencies.append("Riesgo biomecánico no evaluado como HIGH")
+                if not muscle_group_correct:
+                    inconsistencies.append(f"Grupo muscular incorrecto: '{target_muscle}'")
+                if not alternative_coherent:
+                    inconsistencies.append(
+                        f"Alternativa inconsistente con la restricción: get_exercise_alternative seleccionó '{alt_obs.get('name', alt_id)}', "
+                        f"la cual contradice la contraindicación de compresión axial lumbar identificada por assess_injury_risk"
+                    )
+
                 obtained_behavior = (
-                    f"FALLO: La memoria multiturno no modificó la decisión de forma segura. "
-                    f"Fact Retained: {fact_retained}, Risk High: {risk_high}, Leg Alternative: {leg_alternative}."
+                    f"INCONSISTENCIA DETECTADA: {'; '.join(inconsistencies)}. "
+                    f"[Riesgo identificado: {'SÍ' if risk_high else 'NO'} | "
+                    f"Grupo muscular correcto: {'SÍ' if muscle_group_correct else 'NO'} | "
+                    f"Alternativa coherente con restricción: {'SÍ' if alternative_coherent else 'NO'}]."
                 )
         else:
             res = self.react_agent.run_react_loop(tc["prompt"], athlete_id=user_id)
@@ -226,10 +283,12 @@ class AgentQualityEvaluator:
             "average_relevance_score": avg_relevance,
             "evaluations": results,
             "limitations_identified": [
+                "Selección estocástica de alternativas sin filtrado biomecánico: get_exercise_alternative selecciona aleatoriamente del catálogo por grupo muscular sin considerar contraindicaciones o patologías previas identificadas por assess_injury_risk (p. ej., sugiriendo sentadilla goblet a un usuario con hernia discal lumbar).",
                 "Latencia acumulada al encadenar múltiples herramientas secuenciales en el ciclo ReAct.",
                 "Inexistencia de persistencia episódica en base de datos multinodo NoSQL."
             ],
             "proposed_improvements": [
+                "Incorporar filtrado contextual de patologías en get_exercise_alternative o permitir el paso de restricciones biomecánicas al catálogo para excluir ejercicios contraindicados.",
                 "Implementar caché de respuestas para consultas biomecánicas frecuentes.",
                 "Integrar persistencia episódica en Google Cloud Firestore."
             ]
