@@ -166,4 +166,3 @@ class ConversationMemoryManager:
                 file_path.unlink()
             except Exception as e:
                 logger.warning(f"Error eliminando archivo de memoria para {user_id}: {e}")
-

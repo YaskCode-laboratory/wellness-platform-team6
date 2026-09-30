@@ -23,6 +23,39 @@ class ReasoningEngine:
     def __init__(self, tool_registry: Optional[AgentToolRegistry] = None):
         self.tools = tool_registry or AgentToolRegistry()
 
+    def detect_and_execute_tools(self, user_id: str, message: str) -> tuple[Optional[str], Any]:
+        """
+        Analiza la intencionalidad del mensaje y ejecuta dinámicamente la herramienta correspondiente.
+        Retorna (tool_name, tool_result) o (None, None) si no requiere invocación de herramientas.
+        """
+        msg = message.lower().strip()
+
+        # 1. Alternativas de ejercicio
+        if any(k in msg for k in ["alternativa", "reemplaz", "cambiar", "ocupad", "sustitui"]):
+            for group in EXERCISE_CATALOG.keys():
+                if group.lower() in msg or (group == "Pecho" and "banca" in msg) or (group == "Piernas" and "sentadilla" in msg) or (group == "Espalda" and "espalda" in msg):
+                    res = self.tools.execute_tool("get_exercise_alternative", muscle_group=group)
+                    return ("get_exercise_alternative", res)
+            res = self.tools.execute_tool("get_exercise_alternative", muscle_group="Pecho")
+            return ("get_exercise_alternative", res)
+
+        # 2. Nutrición y macronutrientes
+        if any(k in msg for k in ["macro", "calor", "nutri", "proteín", "protein", "dieta", "comer"]):
+            res = self.tools.execute_tool("calculate_nutrition_macros", user_id=user_id)
+            return ("calculate_nutrition_macros", res)
+
+        # 3. Evaluación de riesgo de lesión
+        if any(k in msg for k in ["duele", "dolor", "lesion", "lesión", "molest"]):
+            res = self.tools.execute_tool("assess_injury_risk", user_id=user_id, exercise_name="Sentadilla con Barra")
+            return ("assess_injury_risk", res)
+
+        # 4. RAG Knowledge
+        if any(k in msg for k in ["periodización", "periodizacion", "hipertrofia", "ciencia", "evidencia", "estudio"]):
+            res = self.tools.execute_tool("retrieve_rag_knowledge", query_text=message)
+            return ("retrieve_rag_knowledge", res)
+
+        return (None, None)
+
     def build_routine_prompt(self, user_id: str, extracted_facts: Optional[List[str]] = None) -> str:
         """Construye el prompt estructurado para la generación de rutinas enriquecido con hechos conversacionales."""
         profile = database.get_user_profile(user_id)
