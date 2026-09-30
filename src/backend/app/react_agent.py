@@ -158,4 +158,3 @@ class ReActAgent:
             f"Evidencia de Herramientas Ejecutadas:\n{obs_str}\n\n"
             f"Recomendación: Plan ajustado respetando los datos obtenidos."
         )
-

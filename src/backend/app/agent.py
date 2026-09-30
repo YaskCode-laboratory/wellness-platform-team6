@@ -64,7 +64,7 @@ class WellnessCoachAgent:
         return self.reasoning.generate_local_routine(user_id, extracted_facts=extracted_facts)
 
     def generate_response(self, user_id: str, message: str) -> str:
-        """Genera una respuesta en la conversación ejecutando el ciclo ReAct (Thought -> Action -> Observation -> Final Answer)."""
+        """Genera una respuesta en la conversación considerando historial de memoria y ejecutando el ciclo ReAct."""
         self.memory.add_message(user_id, "user", message)
         profile = database.get_user_profile(user_id)
         name = profile.get("personal_info", {}).get("name", "Atleta")
