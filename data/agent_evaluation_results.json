@@ -34,7 +34,7 @@
       "tool_accuracy_passed": true,
       "relevance_score": 5.0,
       "iterations_used": 3,
-      "final_answer": "Turno 3: **Síntesis ReAct ReActAgent**\nConsulta: '¿La sentadilla libre con barra es recomendable para mi rutina?'\n\nEvidencia de Herramientas Ejecutadas:\n- Herramienta assess_injury_risk: {\"status\": \"success\", \"risk_level\": \"HIGH\", \"warning\": \"Ejercicio de alta compresión axial contraindicado por patología/hernia lumbar.\", \"safe_recommendation\": \"Sustituir por Prensa Inclinada a 45° con apoyo lumbar o Extensión de Rodilla.\"}\n- Herramienta get_exercise_alternative: {\"status\": \"success\", \"muscle_group\": \"Piernas\", \"exercise_id\": \"leg_press\", \"name\": \"Prensa de Piernas\"}\n\nRecomendación: Plan ajustado respetando los datos obtenidos.",
+      "final_answer": "Turno 3: **Síntesis ReAct ReActAgent**\nConsulta: '¿La sentadilla libre con barra es recomendable para mi rutina?'\n\nEvidencia de Herramientas Ejecutadas:\n- Herramienta assess_injury_risk: {\"status\": \"success\", \"risk_level\": \"HIGH\", \"warning\": \"Ejercicio de alta compresión axial contraindicado por patología/hernia lumbar.\", \"safe_recommendation\": \"Sustituir por Prensa Inclinada a 45° con apoyo lumbar o Extensión de Rodilla.\"}\n- Herramienta get_exercise_alternative: {\"status\": \"success\", \"muscle_group\": \"Piernas\", \"exercise_id\": \"goblet_squat\", \"name\": \"Sentadilla Goblet con Mancuerna\"}\n\nRecomendación: Plan ajustado respetando los datos obtenidos.",
       "status": "PASSED"
     },
     {
