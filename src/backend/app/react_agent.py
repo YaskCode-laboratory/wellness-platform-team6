@@ -64,7 +64,11 @@ class ReActAgent:
             else:
                 # Detección dinámica basada en la intencionalidad del mensaje y observaciones previas
                 if iteration == 1:
-                    if any(k in msg_lower for k in ["macro", "calor", "nutri", "dieta", "comer"]):
+                    if any(k in msg_lower for k in ["hola", "buenos días", "gracias", "saludos", "buenas"]):
+                        current_thought = f"PENSAMIENTO [{iteration}]: El usuario envía un saludo o agradecimiento directo. Generando respuesta sin herramientas."
+                        action_name = "FINAL_ANSWER"
+                        action_input = None
+                    elif any(k in msg_lower for k in ["macro", "calor", "nutri", "dieta", "comer"]):
                         current_thought = f"PENSAMIENTO [{iteration}]: El usuario consulta sobre nutrición y macronutrientes. Usaré calculate_nutrition_macros."
                         action_name = "calculate_nutrition_macros"
                         action_input = {"user_id": athlete_id}
@@ -85,9 +89,10 @@ class ReActAgent:
                 elif iteration == 2:
                     last_action = steps[-1]["action"] if steps else ""
                     if last_action == "assess_injury_risk":
-                        current_thought = f"PENSAMIENTO [{iteration}]: Tras evaluar el riesgo biomecánico, buscaré alternativas seguras en el catálogo."
+                        target_muscle = "Piernas" if any(k in msg_lower for k in ["sentadilla", "pierna", "piernas", "cuádriceps", "cuadriceps", "rodilla"]) else ("Espalda" if "espalda" in msg_lower else "Pecho")
+                        current_thought = f"PENSAMIENTO [{iteration}]: Tras evaluar el riesgo biomecánico, buscaré alternativas seguras para {target_muscle} en el catálogo."
                         action_name = "get_exercise_alternative"
-                        action_input = {"muscle_group": "Pecho"}
+                        action_input = {"muscle_group": target_muscle}
                     elif last_action == "get_exercise_alternative":
                         current_thought = f"PENSAMIENTO [{iteration}]: Consultaré la evidencia RAG para respaldar la sustitución de ejercicios."
                         action_name = "retrieve_rag_knowledge"
@@ -153,4 +158,3 @@ class ReActAgent:
             f"Evidencia de Herramientas Ejecutadas:\n{obs_str}\n\n"
             f"Recomendación: Plan ajustado respetando los datos obtenidos."
         )
-
