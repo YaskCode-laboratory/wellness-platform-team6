@@ -34,11 +34,16 @@ def test_catalog_structure():
     assert len(SPLIT_TEMPLATES[3]) == 3
 
 
-def test_llm_provider_manager_initialization():
-    """Verifica la inicialización del administrador de proveedores LLM."""
+def test_llm_provider_manager_initialization(monkeypatch):
+    """Verifica la inicialización del administrador de proveedores LLM utilizando variable de entorno ficticia."""
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-v1-mock-test-key-12345")
     manager = LLMProviderManager()
     key = manager.get_openrouter_key()
-    assert key is not None
+    assert key == "sk-or-v1-mock-test-key-12345"
+
+    # Verificar que retorne None cuando no está configurada la variable de entorno
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    assert manager.get_openrouter_key() is None
 
 
 def test_conversation_memory_manager():
