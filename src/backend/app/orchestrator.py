@@ -208,15 +208,31 @@ class OrchestratorAgent:
         return AgentIntent.GENERAL
 
     def delegate_to_coach(self, user_id: str, message: str) -> SpecializedAgentResponse:
-        """Delega la solicitud al Wellness Coach Agent 2.0."""
+        """Delega la solicitud al Wellness Coach Agent 2.0 (WellnessCoachSpecialist)."""
         try:
-            res_text = self.coach_agent.generate_response(user_id, message)
-            return SpecializedAgentResponse(
-                agent_name="WellnessCoachAgent2.0",
-                status="success",
-                content=res_text,
-                metadata={"domain": "Biomechanics & Training"}
-            )
+            if hasattr(self.coach_agent, "process_specialized_request"):
+                spec_res = self.coach_agent.process_specialized_request(user_id, message)
+                status = spec_res.get("status", "success")
+                in_domain = spec_res.get("in_domain", True)
+                return SpecializedAgentResponse(
+                    agent_name="WellnessCoachAgent2.0",
+                    status=status,
+                    content=spec_res.get("response", ""),
+                    metadata={
+                        "domain": "Biomechanics & Training",
+                        "in_domain": in_domain,
+                        "fitness_profile": spec_res.get("fitness_profile", {}),
+                        "health_conditions": spec_res.get("health_conditions", [])
+                    }
+                )
+            else:
+                res_text = self.coach_agent.generate_response(user_id, message)
+                return SpecializedAgentResponse(
+                    agent_name="WellnessCoachAgent2.0",
+                    status="success",
+                    content=res_text,
+                    metadata={"domain": "Biomechanics & Training", "in_domain": True}
+                )
         except Exception as e:
             logger.warning(f"Error en delegación a WellnessCoachAgent2.0: {e}")
             return self.handle_orchestration_error("WellnessCoachAgent2.0", e)
@@ -317,3 +333,4 @@ class OrchestratorAgent:
 
 # Instancia singleton del Orchestrator Agent
 _orchestrator_instance = OrchestratorAgent()
+

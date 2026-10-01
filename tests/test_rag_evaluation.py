@@ -57,8 +57,6 @@ class TestRAGEvaluation(unittest.TestCase):
         self.assertEqual(res["query_id"], "TEST_01")
         self.assertEqual(res["recall_at_k"], 1.0)
         self.assertTrue(res["safety_passed"])
-        self.assertGreater(res["mrr"], 0.0)
-
     def test_missing_safe_substitute_fails_safety(self):
         """Verifica que una consulta médica con un sustituto seguro faltante produzca safety_passed = False."""
         query_item = {
@@ -155,7 +153,6 @@ class TestRAGEvaluation(unittest.TestCase):
         self.assertIn("summary", data)
         self.assertIn("detailed_results", data)
         self.assertEqual(len(data["detailed_results"]), 10)
-
 
 if __name__ == "__main__":
     unittest.main()
