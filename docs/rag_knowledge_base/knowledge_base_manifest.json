@@ -1,0 +1,103 @@
+{
+  "system": "Wellness Lift RAG Engine",
+  "version": "1.1.0",
+  "domain": "Intelligent Weightlifting & Physical Rehabilitation Knowledge Base",
+  "documents": [
+    {
+      "id": "KB-001",
+      "file": "biomechanics_and_safety.md",
+      "category": "Biomechanics & Joint Safety",
+      "priority": "HIGH",
+      "sources": [
+        "NSCA Standards",
+        "ISB Biomechanics Guidelines"
+      ],
+      "references": [
+        {
+          "author_or_org": "National Strength and Conditioning Association (NSCA) - Haff, G. G., & Triplett, N. T.",
+          "title": "Essentials of Strength Training and Conditioning",
+          "year_or_edition": "4th Edition (2016)",
+          "publisher": "Human Kinetics"
+        },
+        {
+          "author_or_org": "International Society of Biomechanics (ISB) - Nigg, B. M., & Herzog, W.",
+          "title": "Biomechanics of the Musculo-skeletal System",
+          "year_or_edition": "3rd Edition (2007)",
+          "publisher": "John Wiley & Sons"
+        }
+      ]
+    },
+    {
+      "id": "KB-002",
+      "file": "hypertrophy_periodization.md",
+      "category": "Hypertrophy & Progressive Overload",
+      "priority": "HIGH",
+      "sources": [
+        "Journal of Strength and Conditioning Research",
+        "ACSM Guidelines"
+      ],
+      "references": [
+        {
+          "author_or_org": "Schoenfeld, Brad J.",
+          "title": "Science and Development of Muscle Hypertrophy",
+          "year_or_edition": "2nd Edition (2020)",
+          "publisher": "Human Kinetics"
+        },
+        {
+          "author_or_org": "Helms, E. R., Valdez, A., & Morgan, A.",
+          "title": "The Muscle and Strength Pyramid: Training",
+          "year_or_edition": "1st Edition (2015)",
+          "publisher": "3D Muscle Journey"
+        }
+      ]
+    },
+    {
+      "id": "KB-003",
+      "file": "medical_adaptations.md",
+      "category": "Medical Adaptations & Contraindications",
+      "priority": "CRITICAL",
+      "sources": [
+        "Clinical Sports Medicine Protocols",
+        "Physical Therapy Rehabilitation Guidelines"
+      ],
+      "references": [
+        {
+          "author_or_org": "McGill, Stuart M.",
+          "title": "Low Back Disorders: Evidence-Based Prevention and Rehabilitation",
+          "year_or_edition": "3rd Edition (2015)",
+          "publisher": "Human Kinetics"
+        },
+        {
+          "author_or_org": "Adams, M. A., Bogduk, N., Burton, K., & Dolan, P.",
+          "title": "The Biomechanics of Back Pain",
+          "year_or_edition": "3rd Edition (2012)",
+          "publisher": "Churchill Livingstone / Elsevier"
+        },
+        {
+          "author_or_org": "Escamilla, R. F. et al.",
+          "title": "Patellofemoral joint force and stress between a short-arc quad and a leg press",
+          "year_or_edition": "Physical Therapy in Sport (2012)",
+          "publisher": "Elsevier"
+        },
+        {
+          "author_or_org": "American College of Sports Medicine (ACSM)",
+          "title": "ACSM's Guidelines for Exercise Testing and Prescription",
+          "year_or_edition": "11th Edition (2021)",
+          "publisher": "Wolters Kluwer"
+        },
+        {
+          "author_or_org": "Reinold, M. M., Escamilla, R. F., & Wilk, K. E.",
+          "title": "Current concepts in the scientific and clinical rationale for exercise selection in rotator cuff and scapular rehabilitation",
+          "year_or_edition": "JOSPT (2009)",
+          "publisher": "Journal of Orthopaedic & Sports Physical Therapy"
+        },
+        {
+          "author_or_org": "Pescatello, L. S. et al. (ACSM)",
+          "title": "Exercise and Hypertension: Position Stand",
+          "year_or_edition": "Medicine & Science in Sports & Exercise (2019)",
+          "publisher": "ACSM"
+        }
+      ]
+    }
+  ]
+}

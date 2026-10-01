@@ -4,7 +4,7 @@ on:
   issues:
     types: [opened, reopened]
   pull_request:
-    types: [opened, reopened]
+    types: [opened, synchronize, reopened]
 
 jobs:
   add-to-project:
@@ -12,10 +12,11 @@ jobs:
 
     steps:
       - name: Add item to SI-2026-I
+        continue-on-error: true
         env:
-          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
           ITEM_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
         run: |
           gh project item-add 1 \
             --owner YaskCode-laboratory \
-            --url "$ITEM_URL"
+            --url "$ITEM_URL" || true

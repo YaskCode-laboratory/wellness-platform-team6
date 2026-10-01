@@ -2,18 +2,32 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import uuid
-from app import database, schemas, agent
+import logging
+from app import database, schemas, agent, orchestrator
+
+logger = logging.getLogger(__name__)
+
+# Intentar importar ReActAgent y RAGPipeline para endpoints avanzados de IA
+try:
+    from app.react_agent import ReActAgent
+    from app.rag_pipeline import RAGPipeline
+    react_agent_engine = ReActAgent()
+    rag_pipeline_engine = RAGPipeline()
+except Exception as e:
+    logger.warning(f"Motores ReAct/RAG no inicializados de forma avanzada: {e}")
+    react_agent_engine = None
+    rag_pipeline_engine = None
 
 app = FastAPI(
     title="Wellness Lift API",
     description="Backend en la nube para la plataforma inteligente de gestión Wellness",
-    version="1.0.0"
+    version="2.0.0"
 )
 
 # Configurar CORS para permitir peticiones desde el frontend (Vite/React)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción, se especificaría el dominio de Firebase Hosting
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,12 +37,10 @@ app.add_middleware(
 def read_root():
     return {
         "status": "online",
-        "app": "Wellness Lift API",
+        "app": "Wellness Lift API v2.0",
         "database": "Mock Memory" if database.use_mock else "Google Cloud Firestore",
-        "ai_agent": "Wellness Engine Local (Estable)"
+        "ai_agent": "Wellness Engine ReAct 2.0 (Activo)" if react_agent_engine else "Wellness Engine Local (Estable)"
     }
-
-# --- RUTAS DE AUTENTICACIÓN ---
 
 # --- RUTAS DE AUTENTICACIÓN ---
 
@@ -137,7 +149,6 @@ def action_routine_request(request_id: str, payload: schemas.RoutineRequestActio
     if not req:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Solicitud no encontrada.")
     
-    # Si fue aprobada, regeneramos la rutina con IA considerando las condiciones de salud
     if payload.action == "approve":
         user_id = req["user_id"]
         new_routine = agent.generate_weekly_routine(user_id)
@@ -197,7 +208,7 @@ def register_staff(staff: schemas.AdminStaffCreate):
         )
     
     staff_profile = {
-        "role": staff.role, # 'coach' o 'admin'
+        "role": staff.role,
         "is_active": True,
         "created_at": "2026-08-05T12:00:00Z",
         "gym_branch_id": staff.gym_branch_id,
@@ -288,7 +299,7 @@ def create_session(user_id: str, session: schemas.WorkoutSessionLog):
         )
     return {"status": "success", "message": "Entrenamiento registrado con éxito"}
 
-# --- RUTAS DE IA (WELLNESS COACH AGENT) ---
+# --- RUTAS DE IA (WELLNESS COACH AGENT & REACT AGENT) ---
 
 @app.get("/api/v1/ai/routine/{user_id}")
 def get_routine(user_id: str):
@@ -314,12 +325,17 @@ def generate_plan(user_id: str):
 @app.post("/api/v1/ai/chat/{user_id}")
 def chat_with_coach(user_id: str, query: schemas.ChatQuery):
     try:
-        response_text = agent.generate_chat_response(user_id, query.message)
-        return {"response": response_text}
+        orch_res = orchestrator._orchestrator_instance.process_user_request(user_id, query.message)
+        return {
+            "response": orch_res["response"],
+            "intent": orch_res["intent"],
+            "delegated_agent": orch_res["delegated_agent"],
+            "status": orch_res["status"]
+        }
     except Exception as e:
         import traceback
         traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error en chat AI: {str(e)}"
+            detail=f"Error en orquestación AI: {str(e)}"
         )
