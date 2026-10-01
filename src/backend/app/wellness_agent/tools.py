@@ -149,15 +149,24 @@ class AgentToolRegistry:
         fitness = profile.get("fitness_profile", {})
         health_conditions = [h.lower() for h in fitness.get("health_conditions", [])]
 
-        is_lumbar_risk = any("hernia" in h or "lumbar" in h for h in health_conditions)
-        is_squat_or_deadlift = any(k in exercise_name.lower() for k in ["sentadilla con barra", "peso muerto"])
+        # Consultar hechos extraídos en la memoria conversacional del usuario
+        try:
+            from app.agent import memory_manager
+            facts = memory_manager.get_extracted_facts(user_id)
+            for f in facts:
+                health_conditions.append(f.lower())
+        except Exception:
+            pass
+
+        is_lumbar_risk = any("hernia" in h or "lumbar" in h or "espalda" in h for h in health_conditions)
+        is_squat_or_deadlift = any(k in exercise_name.lower() for k in ["sentadilla", "peso muerto"])
 
         if is_lumbar_risk and is_squat_or_deadlift:
             return {
                 "status": "success",
                 "risk_level": "HIGH",
-                "warning": "Ejercicio contraindicado por lesión/hernia lumbar.",
-                "safe_recommendation": "Utilizar Prensa Inclinada a 45° o Sentadilla Goblet asistida."
+                "warning": "Ejercicio de alta compresión axial contraindicado por patología/hernia lumbar.",
+                "safe_recommendation": "Sustituir por Prensa Inclinada a 45° con apoyo lumbar o Extensión de Rodilla."
             }
 
         return {
@@ -168,7 +177,7 @@ class AgentToolRegistry:
         }
 
     def retrieve_rag_knowledge(self, query_text: str, top_k: int = 2) -> List[Dict[str, Any]]:
-        """Consulta la base de conocimiento RAG mediante búsqueda semántica vectorial."""
+        """Recupera contexto semántico de la base vectorial RAG."""
         if not query_text:
             return []
 
