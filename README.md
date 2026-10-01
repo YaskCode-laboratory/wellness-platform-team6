@@ -64,7 +64,7 @@ graph TD
 ### 1. Clonar el repositorio e instalar dependencias
 
 ```bash
-git clone https://github.com/computing-laboratory/wellness-platform-team6.git
+git clone https://github.com/YaskCode-laboratory/wellness-platform-team6.git
 cd wellness-platform-team6
 pip install -r requirements.txt
 ```
