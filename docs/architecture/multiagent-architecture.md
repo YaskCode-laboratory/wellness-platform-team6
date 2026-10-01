@@ -1,82 +1,177 @@
-# Arquitectura del Sistema Multiagente — Wellness Lift (Sprint 3)
+# Diseño de la Arquitectura Multiagente de Wellness Lift
 
-## 1. Visión General y Patrón Arquitectónico
-
-La plataforma **Wellness Lift** implementa una arquitectura multiagente basada en el **Patrón Supervisor (Orchestrator-Workers)**, en el cual un agente central (**Orchestrator Agent**) actúa como punto único de entrada para el usuario, clasificando intenciones y coordinando la ejecución de tareas especializadas entre múltiples agentes de dominio.
+Documentación técnica formal del diseño, responsabilidades, mecanismos de delegación y patrón de orquestación para el ecosistema multiagente de la plataforma **Wellness Lift** (Sprint 3).
 
 ---
 
-## 2. Diagrama Arquitectónico General
+## 1. Propósito y Evolución del Sistema Multiagente
 
-`mermaid
-graph TD
-    Client([Usuario / Atleta]) -->|Solicitud HTTP / REST| API[Backend FastAPI]
-    API --> Orchestrator[Orchestrator Agent - Supervisor]
-    
-    subgraph Supervisor Layer
-        Orchestrator --> IntentClassifier[Clasificador de Intenciones]
-        Orchestrator --> Tracer[DelegationTracer / Observabilidad]
-        Orchestrator --> CompoundCoordinator[Coordinador Compuesto Multidominio]
-    end
-    
-    subgraph Specialized Agents Layer
-        IntentClassifier -->|WORKOUT_BIOMECHANICS| CoachAgent[Wellness Coach Agent 2.0 (Equipo 6)]
-        IntentClassifier -->|NUTRITION| NutritionAgent[Nutrition Agent]
-        IntentClassifier -->|MOTIVATION| MotivationAgent[Motivation Agent]
-        IntentClassifier -->|ANALYTICS| AnalyticsAgent[Analytics Agent]
-        
-        CompoundCoordinator -->|Petición Subtask 1| CoachAgent
-        CompoundCoordinator -->|Petición Subtask 2| NutritionAgent
-    end
-    
-    subgraph Data & Knowledge Services
-        CoachAgent --> RAG[(Motor RAG / Base Vectorial)]
-        CoachAgent --> LLMProvider[Proveedores LLM: OpenRouter / Gemini]
-        NutritionAgent --> Firestore[(Firestore / User Profiles)]
-        AnalyticsAgent --> BigQuery[(BigQuery / Workout Analytics)]
-    end
-    
-    CoachAgent -->|InterAgentResponse| Orchestrator
-    NutritionAgent -->|InterAgentResponse| Orchestrator
-    MotivationAgent -->|InterAgentResponse| Orchestrator
-    AnalyticsAgent -->|InterAgentResponse| Orchestrator
-    
-    Orchestrator -->|Respuesta Consolidada + Trace ID| Client
-`
+La evolución de **Wellness Lift** hacia una arquitectura multiagente responde a la necesidad de resolver tareas complejas y multidominio (entrenamiento adaptativo, nutrición personalizada, soporte psicológico/motivacional y analítica de rendimiento) mediante agentes autónomos especializados.
+
+En lugar de concentrar toda la lógica en una entidad monolítica, el sistema se estructura bajo una topología coordinada donde un **Orchestrator Agent** centralizado clasifica las intenciones del usuario, delega sub-tareas a agentes expertos y sintetiza una respuesta unificada.
+
+> [!IMPORTANT]
+> **Separación entre Diseño e Implementación**: El alcance del presente documento (S3-01) establece la especificación arquitectónica formal, delimitación de responsabilidades, árbol de ruteo y el contrato de comunicación JSON inter-agente que servirá de base para la implementación técnica progresiva en los siguientes entregables del Sprint 3.
 
 ---
 
-## 3. Catálogo de Agentes Especializados y Roles
+## 2. Mapa de Agentes y Responsabilidades
 
-| Agente | Tipo | Responsabilidad Principal | Fuente de Datos / Servicios |
+| Agente | Tipo / Rol | Responsabilidades Principales | Integración / Herramientas |
 | :--- | :--- | :--- | :--- |
-| **Orchestrator Agent** | Supervisor | Clasificación de intenciones, enrutamiento, prevención de ciclos y síntesis de respuestas multidominio. | Memoria conversacional, DelegationTracer. |
-| **Wellness Coach Agent 2.0** | Especialista (Equipo 6) | Biomecánica del ejercicio, selección de alternativas, adaptación por lesiones y generación de rutinas. | Vector Store RAG (384d), catálogo biomecánico, LLMs. |
-| **Nutrition Agent** | Especialista | Cálculo de TDEE, estimación de requerimientos calóricos y desglose de macronutrientes. | Perfil de usuario en Firestore, calculador de macros. |
-| **Motivation Agent** | Especialista | Refuerzo psicológico de adherencia, constancia y validación de hábitos deportivos. | Historial de entrenamientos en base de datos. |
-| **Analytics Agent** | Especialista | Cómputo de volumen de carga acumulado (kg), progreso por grupo muscular y récords personales. | Telemetría de sesiones en BigQuery. |
+| **Orchestrator Agent** | Supervisor / Enrutador Central | Clasificación de intenciones, ruteo de solicitudes, agregación de resultados y control de seguridad global. | `ConversationMemoryManager`, `LLMProviderManager` |
+| **Wellness Coach Agent 2.0** | Agente Especializado (Equipo 6) | Prescripción de rutinas semanales, filtros de seguridad biomecánica ante lesiones, alternativas de ejercicios. | `get_exercise_alternative`, `assess_injury_risk`, RAG Vector Store |
+| **Nutrition Agent** | Agente Especializado | Planificación de menús alimentarios, cálculo de TDEE y ajuste de distribución de macronutrientes. | `calculate_nutrition_macros`, Catálogo Nutricional |
+| **Motivation Agent** | Agente Especializado | Análisis de sentimiento, refuerzo psicológico positivo, estrategias de formación de hábitos. | Registro de Adherencia, Sentiment Analyzer |
+| **Analytics Agent** | Agente Especializado | Análisis de progresiones de carga, cálculo de volumen acumulado y proyecciones de rendimiento. | Base de Sesiones Firestore, Volume Calculator |
+
+### 2.1 Trazabilidad y Estado de Implementación de Componentes
+
+Para asegurar claridad técnica entre los entregables históricos y el nuevo diseño del Sprint 3:
+
+| Componente | Estado de Desarrollo | Ámbito de Desarrollo |
+| :--- | :--- | :--- |
+| **Wellness Coach Agent 2.0** | Existente / Desarrollado | Sprint 2 |
+| **Conversation Memory (`ConversationMemoryManager`)** | Existente / Desarrollado | Sprint 2 |
+| **RAG / Vector Store (`VectorDatabaseStore`)** | Existente / Desarrollado | Sprint 1 |
+| **Orchestrator Agent** | Diseñado / En desarrollo | Sprint 3 (S3-02) |
+| **Nutrition Agent** | Propuesto (Arquitectura Objetivo) | Sprint 3 (S3-03+) |
+| **Motivation Agent** | Propuesto (Arquitectura Objetivo) | Sprint 3 (S3-03+) |
+| **Analytics Agent** | Propuesto (Arquitectura Objetivo) | Sprint 3 (S3-03+) |
 
 ---
 
-## 4. Protocolo de Comunicación Inter-Agente
+## 3. Justificación del Patrón de Orquestación: Supervisor (Centralizado)
 
-La comunicación entre el Supervisor y los agentes subordinados se rige por contratos tipados inmutables:
+Se evaluaron cuatro patrones principales de arquitectura multiagente:
 
-1. **InterAgentMessage**: Mensaje de delegación que encapsula 	ask_id, 	race_id, source_agent, 	arget_agent, intent, context_payload y delegation_depth.
-2. **InterAgentResponse**: Respuesta estructurada que retorna 	ask_id, 	race_id, source_agent, status (success, error_fallback, error_cycle_detected), content, metadata y execution_time_ms.
-3. **DelegationTracer**: Singleton de observabilidad que audita cada mensaje enviado y respuesta recibida, detectando bucles infinitos cuando delegation_depth > max_delegations o cuando se repite un ciclo de agentes.
+1. **Supervisor (centralizado) (SELECCIONADO)**: Un agente supervisor centralizado (Orchestrator Agent) coordina y delega tareas a los agentes especializados, evaluando y consolidando los resultados antes de responder al usuario.
+2. **Sequential (Secuencial)**: Los agentes ejecutan en una cadena rígida paso a paso. Se descartó por rigidez y latencia acumulada innecesaria en consultas simples.
+3. **Hierarchical (Jerárquico Multinivel)**: Árboles profundos de supervisores en múltiples niveles jerárquicos. Se descartó por complejidad de coordinación y sobrecosto de latencia en comparación con el patrón Supervisor centralizado.
+4. **Swarm (Enjambre Autónomo)**: Comunicación libre entre agentes sin supervisor. Se descartó por falta de determinismo y riesgo de romper guardrails de seguridad médica.
 
----
-
-## 5. Integración de Datos y Servicios
-
-El sistema multiagente se desacopla del almacenamiento físico mediante conectores de servicio unificados (src/backend/app/multiagent_data_connector.py):
-
-- **Modo Producción:** Conexión directa a Google Cloud Firestore (@google-cloud/firestore) y Google Cloud BigQuery.
-- **Modo Local / CI:** Fallback transparente a base de datos simulada en memoria y almacén vectorial local en formato JSON (data/vector_store/embeddings.json).
+### Justificación Técnica de la Selección:
+- **Control Centralizado de Seguridad**: El Orchestrator Agent garantiza que las reglas de salud (ej. hernia discal, dolor de rodilla) se apliquen estrictamente antes de retornar cualquier recomendación al atleta.
+- **Eficiencia en Invocación**: Permite invocar únicamente a los agentes especializados requeridos por la consulta actual, reduciendo el consumo de tokens y el tiempo de respuesta.
+- **Gestión de Memoria Unificada**: La memoria conversacional multi-turno se gestiona de forma transparente a nivel del supervisor.
 
 ---
 
-## 6. Evolución Hacia Model Context Protocol (MCP)
+## 4. Diagramas Arquitectónicos en Mermaid
 
-Como decisión arquitectónica documentada en [ADR 008](../architecture/adr/008-interagent-communication-protocol.md), la mensajería interna está preparada para evolucionar hacia **Model Context Protocol (MCP)** y Agent-to-Agent (A2A), permitiendo que los agentes se expongan como herramientas remotas seguras en infraestructuras distribuidas.
+> [!NOTE]
+> **Delimitación entre Arquitectura Objetivo y Estado Real**: Los diagramas Mermaid a continuación ilustran la **arquitectura objetivo** del sistema multiagente (Sprint 3). Los agentes `Nutrition Agent`, `Motivation Agent` y `Analytics Agent`, junto con sus herramientas específicas, corresponden a componentes **propuestos/planificados** dentro del contrato de diseño de S3-01, mientras que el `Wellness Coach Agent 2.0`, `ConversationMemoryManager` y `VectorDatabaseStore` corresponden a componentes funcionales existentes desarrollados en los Sprints 1 y 2.
+
+### A. Diagrama General de la Arquitectura Multiagente
+
+```mermaid
+flowchart TD
+    Client(["Usuario / Cliente Frontend"]) --> FastAPI["Servidor Backend FastAPI"]
+    FastAPI --> Orchestrator["Orchestrator Agent (Supervisor Central)"]
+
+    subgraph MemoryLayer["Capa de Estado y Conocimiento"]
+        Memory["ConversationMemoryManager (Short/Long Term)"]
+        VectorStore[("Vector Store RAG (Embeddings)")]
+        FirestoreDB[("Firestore DB NoSQL (Perfil Atleta)")]
+    end
+
+    Orchestrator <--> Memory
+    Orchestrator <--> FirestoreDB
+
+    subgraph SpecialistAgents["Ecosistema de Agentes Especializados (Propuestos/Existentes)"]
+        CoachAgent["Wellness Coach Agent 2.0 (Existente - Equipo 6)"]
+        NutriAgent["Nutrition Agent (Propuesto - Sprint 3)"]
+        MotiAgent["Motivation Agent (Propuesto - Sprint 3)"]
+        AnalyAgent["Analytics Agent (Propuesto - Sprint 3)"]
+    end
+
+    Orchestrator -- "Delegación: Entrenamiento / Lesiones" --> CoachAgent
+    Orchestrator -- "Delegación: Dieta / Macros" --> NutriAgent
+    Orchestrator -- "Delegación: Estado Anímico" --> MotiAgent
+    Orchestrator -- "Delegación: Métricas / Récords" --> AnalyAgent
+
+    CoachAgent <--> VectorStore
+```
+
+---
+
+### B. Diagrama de Secuencia de Orquestación y Delegación
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Atleta as Atleta (Usuario)
+    participant Supervisor as Orchestrator Agent (Supervisor)
+    participant Coach as Wellness Coach Agent 2.0
+    participant Nutri as Nutrition Agent (Propuesto)
+    participant Memory as ConversationMemory
+
+    Atleta->>Supervisor: "Tengo hernia discal, dame una rutina y mi plan de nutrición"
+    Supervisor->>Memory: Cargar Perfil y Memoria Conversacional
+    Memory-->>Supervisor: Historial + Hechos Extraídos
+
+    Note over Supervisor: Clasificación de Intenciones Múltiples
+
+    par Delegación Concurrente / Secuencial Controlada
+        Supervisor->>Coach: Solicitar Rutina Adaptada (Filtro Hernia Discal)
+        Coach-->>Supervisor: Rutina con Prensa 45° (Sin Sentadilla Libre)
+    and
+        Supervisor->>Nutri: Solicitar Plan de Macronutrientes
+        Nutri-->>Supervisor: TDEE 2400 kcal (Proteínas 160g, Carbs 250g, Grasas 70g)
+    end
+
+    Supervisor->>Supervisor: Sintetizar Respuestas + Validar Guardrails de Seguridad
+    Supervisor->>Memory: Guardar Interacción en Memoria
+    Supervisor-->>Atleta: Entrega de Respuesta Integrada
+```
+
+---
+
+### C. Árbol de Decisión de Ruteo del Supervisor
+
+```mermaid
+flowchart TD
+    InputQuery["Recepción de Mensaje del Usuario"] --> IntentClassifier{"Analizar Intención Principal"}
+
+    IntentClassifier -- "Rutina / Ejercicios / Lesiones" --> RouteCoach["Delegar a Wellness Coach Agent 2.0"]
+    IntentClassifier -- "Comida / Macros / Calorías" --> RouteNutri["Delegar a Nutrition Agent (Propuesto)"]
+    IntentClassifier -- "Progreso / Volumen / Récords" --> RouteAnaly["Delegar a Analytics Agent (Propuesto)"]
+    IntentClassifier -- "Desmotivación / Hábito" --> RouteMoti["Delegar a Motivation Agent (Propuesto)"]
+    IntentClassifier -- "Consulta Multidominio" --> RouteMulti["Delegación Compuesta (Coach + Nutri)"]
+
+    RouteCoach --> Synthesize["Sintetizar Respuesta Final"]
+    RouteNutri --> Synthesize
+    RouteAnaly --> Synthesize
+    RouteMoti --> Synthesize
+    RouteMulti --> Synthesize
+
+    Synthesize --> ReturnClient(["Retornar Respuesta al Cliente"])
+```
+
+---
+
+## 5. Protocolo de Comunicación Inter-Agente (Payload Schema)
+
+Las solicitudes delegadas por el **Orchestrator Agent** hacia los agentes especializados utilizan una estructura JSON homogénea:
+
+```json
+{
+  "task_id": "TASK-2026-0830-01",
+  "source_agent": "OrchestratorAgent",
+  "target_agent": "WellnessCoachAgent2.0",
+  "user_id": "user_12345",
+  "intent": "generate_routine_with_medical_guardrails",
+  "payload": {
+    "fitness_level": "intermedio",
+    "goal": "hipertrofia",
+    "health_conditions": ["hernia discal L4-L5"],
+    "extracted_facts": ["Condición reportada en chat: Dolor lumbar."]
+  }
+}
+```
+
+---
+
+## 6. Conclusión y Coherencia con el Sistema
+
+La arquitectura propuesta evoluciona de manera natural los desarrollos de los Sprints 1 y 2, posicionando al **Wellness Coach Agent 2.0** como el agente experto en ciencia del ejercicio y preservando la retrocompatibilidad con la API FastAPI existente.

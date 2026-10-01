@@ -1,0 +1,147 @@
+[
+  {
+    "query_id": "Q01",
+    "category": "Medical Substitutions",
+    "query": "¿Qué ejercicios están contraindicados si el atleta tiene hernia discal L4-L5 lumbar y cuáles son sus sustitutos seguros?",
+    "expected_relevant_chunk_ids": [
+      "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0"
+    ],
+    "contraindicated_exercises": [
+      "Sentadilla Libre con Barra",
+      "Peso Muerto Convencional",
+      "Press Militar de Pie"
+    ],
+    "safe_substitutes": [
+      "Prensa Inclinada a 45°",
+      "Peso Muerto Rumano asistido en Polea",
+      "Press de Hombro Sentado"
+    ]
+  },
+  {
+    "query_id": "Q02",
+    "category": "Medical Substitutions",
+    "query": "¿Cómo adaptar el entrenamiento para un cliente con lesión de rodilla en meniscos o ligamentos?",
+    "expected_relevant_chunk_ids": [
+      "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0"
+    ],
+    "contraindicated_exercises": [
+      "Prensa Profunda (>90°)",
+      "Sentadilla Hack"
+    ],
+    "safe_substitutes": [
+      "Extensión de Rodilla Controlada",
+      "Peso Muerto Rumano"
+    ]
+  },
+  {
+    "query_id": "Q03",
+    "category": "Medical Substitutions",
+    "query": "¿Qué restricciones de intensidad y maniobras deben aplicarse en atletas con hipertensión arterial?",
+    "expected_relevant_chunk_ids": [
+      "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0"
+    ],
+    "contraindicated_exercises": [
+      "Maniobra de Valsalva continuada",
+      "Repeticiones con cargas >90% 1RM"
+    ],
+    "safe_substitutes": [
+      "Trabajo en rangos de 10-15 reps con respiración rítmica continua"
+    ]
+  },
+  {
+    "query_id": "Q04",
+    "category": "Medical Substitutions",
+    "query": "¿Qué ejercicios se deben evitar ante una lesión de manguito rotador en el hombro?",
+    "expected_relevant_chunk_ids": [
+      "medical_adaptations.md#2._matriz_de_sustitución_por_lesión_/_condición-0"
+    ],
+    "contraindicated_exercises": [
+      "Press de Banca Plano con Agarre Ancho",
+      "Fondos en Paralelas"
+    ],
+    "safe_substitutes": [
+      "Press de Banca Neutro con Mancuernas",
+      "Elevaciones Laterales en Polea en Plano Escapular"
+    ]
+  },
+  {
+    "query_id": "Q05",
+    "category": "Biomechanics & Safety",
+    "query": "¿Cuáles son los principios biomecánicos fundamentales para mantener la alineación articular en sentadillas?",
+    "expected_relevant_chunk_ids": [
+      "biomechanics_and_safety.md#2._principios_biomecánicos_fundamentales-0"
+    ],
+    "keywords": [
+      "lordosis lumbar neutra",
+      "valgo de rodilla",
+      "Rango de Movimiento"
+    ]
+  },
+  {
+    "query_id": "Q06",
+    "category": "Biomechanics & Safety",
+    "query": "¿Qué organizaciones o fuentes científicas respaldan los criterios de selección biomecánica?",
+    "expected_relevant_chunk_ids": [
+      "biomechanics_and_safety.md#3._criterios_de_selección_de_información-0"
+    ],
+    "keywords": [
+      "NSCA",
+      "ISB",
+      "National Strength and Conditioning Association"
+    ]
+  },
+  {
+    "query_id": "Q07",
+    "category": "Hypertrophy & Periodization",
+    "query": "¿Cuáles son los mecanismos principales para la estimulación de hipertrofia muscular?",
+    "expected_relevant_chunk_ids": [
+      "hypertrophy_periodization.md#2._mecanismos_de_hipertrofia-0"
+    ],
+    "keywords": [
+      "Tensión Mecánica",
+      "Sobrecarga Progresiva",
+      "Autorregulación",
+      "RPE",
+      "RIR"
+    ]
+  },
+  {
+    "query_id": "Q08",
+    "category": "Hypertrophy & Periodization",
+    "query": "¿Cómo se estructuran los rangos de repeticiones y descanso en la fase de fuerza máxima frente a hipertrofia?",
+    "expected_relevant_chunk_ids": [
+      "hypertrophy_periodization.md#3._periodización_por_objetivos-0"
+    ],
+    "keywords": [
+      "1 a 5 repeticiones",
+      "6 a 12 repeticiones",
+      "descansos de 3 a 5 minutos"
+    ]
+  },
+  {
+    "query_id": "Q09",
+    "category": "Domain Scope",
+    "query": "¿Cuál es el alcance del documento de adaptaciones médicas en el motor RAG?",
+    "expected_relevant_chunk_ids": [
+      "medical_adaptations.md#1._dominio_y_alcance-0"
+    ],
+    "keywords": [
+      "reglas de exclusión",
+      "sustitución de ejercicios",
+      "lesiones biomecánicas"
+    ]
+  },
+  {
+    "query_id": "Q10",
+    "category": "Domain Scope",
+    "query": "¿Cuál es el dominio y alcance de las guías de periodización e hipertrofia?",
+    "expected_relevant_chunk_ids": [
+      "hypertrophy_periodization.md#1._dominio_y_alcance-0"
+    ],
+    "keywords": [
+      "programación de volumen",
+      "intensidad",
+      "periodización"
+    ]
+  }
+]

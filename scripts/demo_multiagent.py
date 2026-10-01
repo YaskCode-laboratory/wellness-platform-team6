@@ -59,7 +59,7 @@ def run_demo():
             "step": 2,
             "title": "Delegacion a Nutrition Agent (Calculo de TDEE y Macronutrientes)",
             "user_id": "demo_athlete_02",
-            "prompt": "Calcula mis calorias y macronutrientes para mi dieta de volumen"
+            "prompt": "Calcula mis calorias y macronutrientes para mi dieta diaria"
         },
         {
             "step": 3,

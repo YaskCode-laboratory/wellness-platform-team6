@@ -8,7 +8,7 @@ El **Orchestrator Agent** es el componente supervisor responsable de recibir tod
 
 ## 2. Diagrama de Estados y Flujo de Procesamiento
 
-`mermaid
+```mermaid
 stateDiagram-v2
     [*] --> RecibirConsulta: Mensaje del Usuario
     RecibirConsulta --> ClasificarIntencion: Extracción de Keywords y Contexto
@@ -34,7 +34,7 @@ stateDiagram-v2
     FallbackSeguro --> RegistrarTraza
     
     RegistrarTraza --> [*]: Retornar al Cliente
-`
+```
 
 ---
 
@@ -54,5 +54,5 @@ El orquestador clasifica las intenciones evaluando el vocabulario semántico y l
 ## 4. Mitigación de Bucles y Resiliencia
 
 El supervisor implementa dos mecanismos clave de protección:
-- **Límite de Profundidad de Delegación (max_delegations=5):** Evita ciclos de reenvío indefinido entre agentes.
-- **Manejo de Errores con Fallback Estructurado:** En caso de excepción no controlada en un agente especialista, el supervisor retorna un mensaje de contingencia seguro con estado error_fallback sin interrumpir la experiencia del usuario.
+- **Límite de Profundidad de Delegación (`max_hops=5`):** Evita ciclos de reenvío indefinido entre agentes.
+- **Manejo de Errores con Fallback Estructurado:** En caso de excepción no controlada en un agente especialista, el supervisor retorna un mensaje de contingencia seguro con estado `error_fallback` sin interrumpir la experiencia del usuario.

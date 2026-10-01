@@ -18,13 +18,13 @@
 1. **Wellness Coach Agent 2.0 (Equipo 6):** Biomecánica del ejercicio, selección de alternativas seguras por lesiones médicas (ej. hernia discal lumbar), motor RAG con base vectorial de 384 dimensiones y ciclo de razonamiento ReAct.
 2. **Nutrition Agent:** Estimación del gasto energético total (TDEE) y cálculo de macronutrientes.
 3. **Motivation Agent:** Refuerzo de hábitos, disciplina y adherencia deportiva.
-4. **Analytics Agent:** Telemetría de progreso, volumen acumulado (kg) y validación de sobrecarga progresiva.
+4. **Analytics Agent:** Telemetría de progreso, volumen acumulado (kg) y validación de sobrecarga progresiva mediante capa de analítica local / abstracción BigQuery.
 
 ---
 
 ## 🏛️ Arquitectura del Sistema Multiagente
 
-`mermaid
+```mermaid
 graph TD
     User([Atleta / Usuario]) -->|Petición REST| API[FastAPI Backend v2.0]
     API --> Supervisor[Orchestrator Agent - Supervisor]
@@ -46,8 +46,8 @@ graph TD
     subgraph Data & Services Layer
         Coach --> VectorDB[(Vector Store RAG / 384d)]
         Coach --> LLM[OpenRouter / Gemini AI]
-        Nutri --> Firestore[(Google Cloud Firestore)]
-        Ana --> BigQuery[(Google Cloud BigQuery)]
+        Nutri --> Firestore[(Google Cloud Firestore / Mock Local)]
+        Ana --> LocalAnalytics[(Local Analytics / BigQuery Abstraction Layer)]
     end
     
     Coach --> Resp[InterAgentResponse]
@@ -55,7 +55,7 @@ graph TD
     Moti --> Resp
     Ana --> Resp
     Resp --> Supervisor --> User
-`
+```
 
 ---
 
@@ -63,24 +63,24 @@ graph TD
 
 ### 1. Clonar el repositorio e instalar dependencias
 
-`ash
-git clone https://github.com/YaskCode-laboratory/wellness-platform-team6.git
+```bash
+git clone https://github.com/computing-laboratory/wellness-platform-team6.git
 cd wellness-platform-team6
 pip install -r requirements.txt
-`
+```
 
 ### 2. Ejecutar la Demostración Multiagente End-to-End
 
-`ash
+```bash
 python scripts/demo_multiagent.py
-`
-> Ejecuta 5 escenarios representativos: consulta de entrenamiento al Coach 2.0, cálculo nutricional al Nutrition Agent, refuerzo psicológico al Motivation Agent, métricas de progreso al Analytics Agent y un caso de colaboración multidominio compuesta con trazabilidad de Spans (	race_id).
+```
+> Ejecuta 5 escenarios representativos: consulta de entrenamiento al Coach 2.0, cálculo nutricional al Nutrition Agent, refuerzo psicológico al Motivation Agent, métricas de progreso al Analytics Agent y un caso de colaboración multidominio compuesta con trazabilidad de Spans (`trace_id`).
 
 ### 3. Ejecutar la Suite de Pruebas Automatizadas
 
-`ash
-python -m unittest discover -s tests -p "test_*.py"
-`
+```bash
+pytest tests/ -v
+```
 
 ---
 
@@ -88,7 +88,7 @@ python -m unittest discover -s tests -p "test_*.py"
 
 | Rol | Correo Electrónico | Contraseña | Permisos |
 | :--- | :--- | :--- | :--- |
-| **Administrador** | dmin@wellnessgym.com | dmin123 | Control total, sucursales, alta de staff y reasignación de atletas. |
+| **Administrador** | admin@wellnessgym.com | admin123 | Control total, sucursales, alta de staff y reasignación de atletas. |
 | **Entrenador (Coach)** | coach.carlos@wellnessgym.com | coach123 | Edición de rutinas, revisión de solicitudes y ficha técnica de alumnos. |
 | **Atleta / Cliente** | juan@wellness.com | password123 | Modo Gimnasio en vivo, registro día a día y asistente IA. |
 
@@ -96,7 +96,7 @@ python -m unittest discover -s tests -p "test_*.py"
 
 ## 📁 Estructura del Repositorio
 
-`
+```
 wellness-platform-team6/
 ├── .github/          # Workflows de CI/CD para GitHub Actions
 ├── data/             # Base de conocimiento RAG, chunks y vectores de embeddings
@@ -115,7 +115,7 @@ wellness-platform-team6/
 ├── CHANGELOG.md      # Registro de cambios del proyecto
 ├── LICENSE           # Licencia del proyecto (MIT)
 └── README.md         # Documentación principal
-`
+```
 
 ---
 

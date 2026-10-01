@@ -96,7 +96,7 @@ class MultiAgentFlowEvaluator:
                 id="TC-MA-02",
                 name="Delegación Directa a Nutrition Agent (Cálculo de Macros y TDEE)",
                 user_id="athlete_02",
-                prompt="Calcula mis calorías y macronutrientes para mi dieta de volumen",
+                prompt="Calcula mis calorías y macronutrientes para mi dieta diaria",
                 expected_intent=AgentIntent.NUTRITION.value,
                 expected_primary_agent="NutritionAgent",
                 requires_collaboration=False,
@@ -146,6 +146,17 @@ class MultiAgentFlowEvaluator:
                 requires_collaboration=False,
                 expected_collaborators=[],
                 quality_criteria=["contraindic", "alternativa", "prensa", "seguridad"]
+            ),
+            MultiAgentTestCase(
+                id="TC-MA-07",
+                name="Manejo de Fallback y Datos Faltantes (Atleta sin Perfil Antropométrico)",
+                user_id="unknown_athlete_07",
+                prompt="Calcula mis macronutrientes y calorías diarias",
+                expected_intent=AgentIntent.NUTRITION.value,
+                expected_primary_agent="NutritionAgent",
+                requires_collaboration=False,
+                expected_collaborators=[],
+                quality_criteria=["perfil", "peso", "altura"]
             )
         ]
 
@@ -221,7 +232,15 @@ class MultiAgentFlowEvaluator:
         total_cases = len(results)
         intent_matches = sum(1 for r in results if r.intent_matched)
         delegation_successes = sum(1 for r in results if r.delegation_success)
-        collaboration_successes = sum(1 for r in results if r.collaboration_success)
+        
+        # El porcentaje de éxito en colaboración debe calcularse ÚNICAMENTE sobre los casos donde requires_collaboration == True
+        collab_cases = [r for r in results if r.requires_collaboration]
+        if collab_cases:
+            collab_successes = sum(1 for r in collab_cases if r.collaboration_success)
+            collaboration_pct = round((collab_successes / len(collab_cases)) * 100.0, 1)
+        else:
+            collaboration_pct = 100.0
+
         avg_latency = sum(r.latency_ms for r in results) / total_cases if total_cases > 0 else 0.0
         avg_quality = sum(r.quality_score_pct for r in results) / total_cases if total_cases > 0 else 0.0
 
@@ -229,7 +248,7 @@ class MultiAgentFlowEvaluator:
             "total_test_cases": total_cases,
             "intent_accuracy_pct": round((intent_matches / total_cases) * 100.0, 1),
             "delegation_accuracy_pct": round((delegation_successes / total_cases) * 100.0, 1),
-            "collaboration_success_pct": round((collaboration_successes / total_cases) * 100.0, 1),
+            "collaboration_success_pct": collaboration_pct,
             "average_latency_ms": round(avg_latency, 2),
             "min_latency_ms": round(min(r.latency_ms for r in results), 2) if results else 0,
             "max_latency_ms": round(max(r.latency_ms for r in results), 2) if results else 0,
