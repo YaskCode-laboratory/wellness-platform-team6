@@ -97,7 +97,7 @@ def test_end_to_end_tool_response_synthesis():
     """Verifica que el resultado de la herramienta se incorpore adecuadamente en la respuesta final del agente."""
     response = agent.generate_chat_response("user123", "¿Qué alternativa me sugieres para ejercicio de Pecho?")
     assert isinstance(response, str)
-    assert "get_exercise_alternative" in response or "Tool Calling" in response or "pecho" in response.lower()
+    assert "get_exercise_alternative" in response or "Tool Calling" in response or "Pecho" in response
 
 
 def test_end_to_end_tool_calling_sequence_integration():
