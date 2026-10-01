@@ -14,33 +14,72 @@
 
 ## 📌 Visión General del Proyecto
 
-**Wellness Lift** es una plataforma SaaS inteligente multi-sucursal y multi-rol diseñada para optimizar la gestión de gimnasios de levantamiento de pesas, entrenadores personales y atletas. Integra un motor de **Inteligencia Artificial (OpenRouter Cloud / Gemini)** para la generación adaptativa de rutinas personalizadas basadas en lesiones médicas, periodización deportiva y sobrecarga progresiva.
+**Wellness Lift** es una plataforma SaaS inteligente multi-sucursal y multi-rol diseñada para la gestión integral de centros de entrenamiento, entrenadores personales y atletas. Integra un **Sistema Multiagente (Supervisor Pattern)** con agentes especializados por dominio:
+1. **Wellness Coach Agent 2.0 (Equipo 6):** Biomecánica del ejercicio, selección de alternativas seguras por lesiones médicas (ej. hernia discal lumbar), motor RAG con base vectorial de 384 dimensiones y ciclo de razonamiento ReAct.
+2. **Nutrition Agent:** Estimación del gasto energético total (TDEE) y cálculo de macronutrientes.
+3. **Motivation Agent:** Refuerzo de hábitos, disciplina y adherencia deportiva.
+4. **Analytics Agent:** Telemetría de progreso, volumen acumulado (kg) y validación de sobrecarga progresiva mediante capa de analítica local / abstracción BigQuery.
 
 ---
 
-## 🏛️ Arquitectura del Sistema
+## 🏛️ Arquitectura del Sistema Multiagente
 
-El proyecto sigue una arquitectura desacoplada de microservicios y Single Page Application (SPA):
-
+```mermaid
+graph TD
+    User([Atleta / Usuario]) -->|Petición REST| API[FastAPI Backend v2.0]
+    API --> Supervisor[Orchestrator Agent - Supervisor]
+    
+    subgraph Multiagent Orchestration Core
+        Supervisor --> Classifier[Clasificador de Intenciones]
+        Supervisor --> Tracer[DelegationTracer / Observabilidad]
+        Supervisor --> Coordinator[Coordinador Multidominio]
+        
+        Classifier -->|WORKOUT_BIOMECHANICS| Coach[Wellness Coach Agent 2.0 (Equipo 6)]
+        Classifier -->|NUTRITION| Nutri[Nutrition Agent]
+        Classifier -->|MOTIVATION| Moti[Motivation Agent]
+        Classifier -->|ANALYTICS| Ana[Analytics Agent]
+        
+        Coordinator -->|Subtask 1| Coach
+        Coordinator -->|Subtask 2| Nutri
+    end
+    
+    subgraph Data & Services Layer
+        Coach --> VectorDB[(Vector Store RAG / 384d)]
+        Coach --> LLM[OpenRouter / Gemini AI]
+        Nutri --> Firestore[(Google Cloud Firestore / Mock Local)]
+        Ana --> LocalAnalytics[(Local Analytics / BigQuery Abstraction Layer)]
+    end
+    
+    Coach --> Resp[InterAgentResponse]
+    Nutri --> Resp
+    Moti --> Resp
+    Ana --> Resp
+    Resp --> Supervisor --> User
 ```
-                               ┌─────────────────────────┐
-                               │   AWS Amplify (HTTPS)   │
-                               │  Frontend React Vite    │
-                               └────────────┬────────────┘
-                                            │ HTTP / JSON API
-                                            ▼
-                               ┌─────────────────────────┐
-                               │     AWS EC2 (Ubuntu)    │
-                               │  Nginx Reverse Proxy    │
-                               │    FastAPI Backend      │
-                               └────────────┬────────────┘
-                                            │
-                     ┌──────────────────────┴──────────────────────┐
-                     ▼                                             ▼
-       ┌───────────────────────────┐                 ┌───────────────────────────┐
-       │   Google Cloud Firestore  │                 │ OpenRouter / Gemini API   │
-       │    Base de Datos NoSQL    │                 │   Motor de Agentes de IA  │
-       └───────────────────────────┘                 └───────────────────────────┘
+
+---
+
+## 🚀 Guía de Inicio Rápido y Ejecución de la Demo
+
+### 1. Clonar el repositorio e instalar dependencias
+
+```bash
+git clone https://github.com/YaskCode-laboratory/wellness-platform-team6.git
+cd wellness-platform-team6
+pip install -r requirements.txt
+```
+
+### 2. Ejecutar la Demostración Multiagente End-to-End
+
+```bash
+python scripts/demo_multiagent.py
+```
+> Ejecuta 5 escenarios representativos: consulta de entrenamiento al Coach 2.0, cálculo nutricional al Nutrition Agent, refuerzo psicológico al Motivation Agent, métricas de progreso al Analytics Agent y un caso de colaboración multidominio compuesta con trazabilidad de Spans (`trace_id`).
+
+### 3. Ejecutar la Suite de Pruebas Automatizadas
+
+```bash
+pytest tests/ -v
 ```
 
 ---
@@ -49,9 +88,9 @@ El proyecto sigue una arquitectura desacoplada de microservicios y Single Page A
 
 | Rol | Correo Electrónico | Contraseña | Permisos |
 | :--- | :--- | :--- | :--- |
-| **Administrador** | `admin@wellnessgym.com` | `admin123` | Control total, sucursales, alta de staff y reasignación de atletas. |
-| **Entrenador (Coach)** | `coach.carlos@wellnessgym.com` | `coach123` | Edición de rutinas, revisión de solicitudes y ficha técnica de alumnos. |
-| **Atleta / Cliente** | `juan@wellness.com` | `password123` | Modo Gimnasio en vivo, registro día a día y asistente IA. |
+| **Administrador** | admin@wellnessgym.com | admin123 | Control total, sucursales, alta de staff y reasignación de atletas. |
+| **Entrenador (Coach)** | coach.carlos@wellnessgym.com | coach123 | Edición de rutinas, revisión de solicitudes y ficha técnica de alumnos. |
+| **Atleta / Cliente** | juan@wellness.com | password123 | Modo Gimnasio en vivo, registro día a día y asistente IA. |
 
 ---
 
@@ -59,18 +98,20 @@ El proyecto sigue una arquitectura desacoplada de microservicios y Single Page A
 
 ```
 wellness-platform-team6/
-├── .github/          # Workflows de CI/CD para despliegue automático
-├── assets/           # Capturas de pantalla, diagramas y recursos multimedia
-├── data/             # Datos semilla en JSON y esquemas de base de datos
-├── docker/           # Archivos de contenedorización (Docker & Docker-Compose)
-├── docs/             # Especificaciones técnicas, manual de API y guías AWS
-├── prompts/          # Prompts del sistema utilizados por el Agente IA
-├── scripts/          # Scripts de automatización y despliegue en AWS EC2
+├── .github/          # Workflows de CI/CD para GitHub Actions
+├── data/             # Base de conocimiento RAG, chunks y vectores de embeddings
+├── docs/             # Documentación técnica, ADRs, guías de arquitectura y reportes
+│   ├── architecture/ # Arquitectura del sistema y decisiones ADR
+│   ├── agents/       # Especificación de agentes especializados y comunicación
+│   ├── evaluation/   # Evaluación de calidad, latencia y observabilidad
+│   ├── orchestration/# Especificación del Orchestrator Supervisor
+│   └── reports/      # Informes finales consolidados de Sprints 1, 2 y 3
+├── prompts/          # Prompts del sistema utilizados por los agentes IA
+├── scripts/          # Scripts de automatización, generación de embeddings y demo
 ├── src/
-│   ├── backend/      # [OFICIAL] API RESTful con FastAPI, Uvicorn y base de datos NoSQL
-│   └── frontend/     # [OFICIAL] Aplicación web SPA con React, Vite y CSS Emil Kowalski Style
-├── tests/            # Suite de pruebas unitarias e integración
-├── .env.example      # Plantilla de variables de entorno (con placeholders ficticios)
+│   ├── backend/      # [OFICIAL] API RESTful con FastAPI, RAG y sistema multiagente
+│   └── frontend/     # [OFICIAL] Aplicación web SPA con React 18 y Vite
+├── tests/            # Suite completa de pruebas unitarias y de integración
 ├── CHANGELOG.md      # Registro de cambios del proyecto
 ├── LICENSE           # Licencia del proyecto (MIT)
 └── README.md         # Documentación principal
@@ -78,25 +119,17 @@ wellness-platform-team6/
 
 ---
 
-## 📐 Declaración de la Estructura Oficial de Desarrollo y Despliegue
+## 📚 Documentación Técnica Detallada del Sprint 3
 
-> ℹ️ **Nota de Arquitectura y Evaluación Académica (Maestría en TIC)**:
-> 
-> La estructura de código fuente oficial y única para el desarrollo y despliegue del proyecto se encuentra ubicada en el directorio **`src/`**:
-> - **Backend Oficial (`src/backend/`)**: Contiene los microservicios RESTful con FastAPI, conectores a Google Cloud Firestore y motor de Agentes IA.
-> - **Frontend Oficial (`src/frontend/`)**: Contiene la interfaz gráfica SPA con React 18, Vite y el sistema de diseño Emil Kowalski.
-> 
-> **Eliminación de Estructuras Anteriores**: Se han removido definitivamente las carpetas duplicadas raíz `backend/` y `frontend/` para garantizar un árbol de proyecto impecable, evitar ambigüedades en las ejecuciones de Docker/CI-CD y cumplir estrictamente con los estándares de ingeniería de software requeridos.
-
----
-
-## 🚀 Despliegue en AWS Cloud
-
-- **Backend (FastAPI)**: Servidor Ubuntu `t3.micro` en AWS EC2 administrado por `systemd` y proxy `Nginx`.
-- **Frontend (React)**: AWS Amplify Hosting con canal CI/CD continuo conectado a este repositorio de GitHub.
+- 📄 [Informe Final del Sprint 3](docs/reports/sprint-3-report.md)
+- 📐 [Arquitectura del Sistema Multiagente](docs/architecture/multiagent-architecture.md)
+- 🧭 [Especificación del Orchestrator Agent](docs/orchestration/orchestrator-agent.md)
+- 🤝 [Protocolo de Comunicación Inter-Agente](docs/agents/interagent-communication.md)
+- 📊 [Evaluación del Flujo Multiagente y Observabilidad](docs/evaluation/multiagent-evaluation.md)
+- 💾 [Integración con Firestore, BigQuery y Servicios](docs/multiagent_data_integration.md)
 
 ---
 
 ## 📄 Licencia
 
-Este proyecto se distribuye bajo la licencia **MIT**. Consulta el archivo `LICENSE` para más detalles.
+Este proyecto se distribuye bajo la licencia **MIT**. Consulta el archivo LICENSE para más detalles.
