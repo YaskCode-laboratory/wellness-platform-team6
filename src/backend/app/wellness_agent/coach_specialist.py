@@ -23,10 +23,14 @@ PROMPT_FILENAME = "system_prompt_wellness_coach_2.0.txt"
 
 def load_system_prompt() -> str:
     """Carga el System Prompt especializado desde el archivo oficial prompts/system_prompt_wellness_coach_2.0.txt."""
-    current_file_dir = Path(__file__).resolve().parent
+    current_file = Path(__file__).resolve()
+    # current_file: src/backend/app/wellness_agent/coach_specialist.py -> parents[4] es el repo_root
+    repo_root = current_file.parents[4]
+    official_path = repo_root / "prompts" / PROMPT_FILENAME
+
     possible_paths = [
-        current_file_dir.parent.parent.parent / "prompts" / PROMPT_FILENAME,  # <repo_root>/prompts/...
-        current_file_dir.parent.parent / "prompts" / PROMPT_FILENAME,
+        official_path,
+        current_file.parent.parent.parent.parent / "prompts" / PROMPT_FILENAME,
         Path.cwd() / "prompts" / PROMPT_FILENAME,
         Path.cwd().parent / "prompts" / PROMPT_FILENAME,
     ]
@@ -99,13 +103,19 @@ class WellnessCoachSpecialist:
             "dólar", "dolar", "política", "politica", "clima", "tiempo libre", "película", "pelicula"
         ]
 
-        has_out_kw = any(kw in q_lower for kw in out_keywords)
         has_coach_kw = any(kw in q_lower for kw in coach_keywords)
+        has_out_kw = any(kw in q_lower for kw in out_keywords)
+
+        if has_coach_kw:
+            pure_non_fitness = ["receta de cocina", "código en python", "capital de", "precio del dólar", "cómo programar"]
+            if any(p in q_lower for p in pure_non_fitness):
+                return False
+            return True
 
         if has_out_kw:
             return False
 
-        return has_coach_kw
+        return False
 
     def process_specialized_request(self, user_id: str, message: str) -> Dict[str, Any]:
         """

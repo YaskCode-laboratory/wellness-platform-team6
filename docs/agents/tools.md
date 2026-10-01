@@ -6,7 +6,7 @@ Documentación técnica del catálogo de herramientas asociadas, declaraciones f
 
 ## 1. Visión General del Registro de Herramientas
 
-El módulo `AgentToolRegistry` ubicado en [`src/backend/app/wellness_agent/tools.py`](file:///C:/Users/Alejandro/.gemini/antigravity/scratch/wellness-platform-team6/src/backend/app/wellness_agent/tools.py) proporciona capacidades de ejecución de herramientas (*Tool Calling / Function Calling*).
+El módulo `AgentToolRegistry` ubicado en [`src/backend/app/wellness_agent/tools.py`](../../src/backend/app/wellness_agent/tools.py) proporciona capacidades de ejecución de herramientas (*Tool Calling / Function Calling*).
 
 ```mermaid
 flowchart TD

@@ -1,6 +1,6 @@
 """
 Suite de Pruebas Automatizadas para la Arquitectura Multiagente (Issue #19 - S3-01).
-Verifica la presencia, estructura, sintaxis Mermaid y justificación del patrón Supervisor.
+Verifica la presencia y estructura de la documentación arquitectónica, la inclusión de diagramas Mermaid y la justificación del patrón Supervisor.
 """
 
 from pathlib import Path
@@ -31,3 +31,4 @@ def test_adr_005_integrity():
     assert "ADR-005" in content
     assert "Patrón Supervisor" in content or "Supervisor" in content
     assert "Orchestrator Agent" in content
+    assert "Hierarchical" in content, "ADR-005 debe incluir el patrón Hierarchical en la comparativa de patrones evaluados"

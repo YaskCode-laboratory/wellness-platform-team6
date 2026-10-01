@@ -6,7 +6,12 @@ Verifica responsabilidad de dominio, delimitación de fronteras fuera de dominio
 import sys
 from pathlib import Path
 
-import pytest
+try:
+    import pytest
+except ImportError:
+    pytest = None
+
+import unittest
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 SYS_BACKEND_DIR = ROOT_DIR / "src" / "backend"
@@ -17,10 +22,11 @@ from app.wellness_agent.coach_specialist import WellnessCoachSpecialist, load_sy
 from app.orchestrator import OrchestratorAgent
 
 
-@pytest.fixture
-def specialist():
-    """Fixture para obtener una instancia limpia del Agente Especializado."""
-    return WellnessCoachSpecialist()
+if pytest:
+    @pytest.fixture
+    def specialist():
+        """Fixture para obtener una instancia limpia del Agente Especializado."""
+        return WellnessCoachSpecialist()
 
 
 def test_domain_boundary_verification(specialist):
@@ -100,3 +106,33 @@ def test_adaptive_routine_generation(specialist):
     routine = specialist.generate_adaptive_routine("user123")
     assert "weekly_schedule" in routine
     assert len(routine["weekly_schedule"]) >= 3
+
+
+class TestSpecializedCoachAgent(unittest.TestCase):
+    def setUp(self):
+        self.specialist = WellnessCoachSpecialist()
+
+    def test_domain_boundary_verification_unit(self):
+        test_domain_boundary_verification(self.specialist)
+
+    def test_system_prompt_single_source_of_truth_unit(self):
+        test_system_prompt_single_source_of_truth(self.specialist)
+
+    def test_in_domain_specialized_request_unit(self):
+        test_in_domain_specialized_request(self.specialist)
+
+    def test_out_of_domain_specialized_request_unit(self):
+        test_out_of_domain_specialized_request(self.specialist)
+
+    def test_out_of_domain_propagation_to_orchestrator_unit(self):
+        test_out_of_domain_propagation_to_orchestrator()
+
+    def test_orchestrator_integration_with_specialist_unit(self):
+        test_orchestrator_integration_with_specialist()
+
+    def test_adaptive_routine_generation_unit(self):
+        test_adaptive_routine_generation(self.specialist)
+
+
+if __name__ == "__main__":
+    unittest.main()

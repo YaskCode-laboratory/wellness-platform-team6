@@ -30,7 +30,4 @@ service-account-key.json
 Thumbs.db
 .vscode/
 .idea/
-
-# Datos temporales de memoria conversacional
-data/memory/
 src/data/
