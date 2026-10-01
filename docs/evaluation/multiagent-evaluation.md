@@ -18,7 +18,7 @@ El propósito de esta evaluación es verificar el comportamiento, precisión, re
 | ID Caso | Nombre del Escenario | Entrada del Usuario (Prompt) | Intención Esperada | Agente Primario Esperado | Requiere Colaboración | Criterios de Calidad Auditados |
 | :--- | :--- | :--- | :--- | :--- | :---: | :--- |
 | **TC-MA-01** | Delegación Directa a Wellness Coach | *"¿Qué rutina me recomiendas para hipertrofia de pecho y espalda?"* | WORKOUT_BIOMECHANICS | WellnessCoachAgent2.0 | No | Prescripción de ejercicios, series, repeticiones y biomecánica adaptada. |
-| **TC-MA-02** | Delegación Directa a Nutrition Agent | *"Calcula mis calorías y macronutrientes para mi dieta de volumen"* | NUTRITION | NutritionAgent | No | Estimación de TDEE, gramos de proteína, carbohidratos y grasas. |
+| **TC-MA-02** | Delegación Directa a Nutrition Agent | *"Calcula mis calorías y macronutrientes para mi dieta diaria"* | NUTRITION | NutritionAgent | No | Estimación de TDEE, gramos de proteína, carbohidratos y grasas. |
 | **TC-MA-03** | Delegación Directa a Motivation Agent | *"Hoy me siento muy desanimado y con flojera para entrenar"* | MOTIVATION | MotivationAgent | No | Refuerzo de disciplina deportiva, tono empático y conteo de sesiones. |
 | **TC-MA-04** | Delegación Directa a Analytics Agent | *"Muestra mi progreso, volumen total acumulado y récord de sesiones"* | ANALYTICS | AnalyticsAgent | No | Cómputo de volumen en kg, sesiones completadas y tendencia de sobrecarga. |
 | **TC-MA-05** | Colaboración Inter-Agente Multidominio | *"Diseña mi rutina de ejercicios de pierna y calcula mis calorías y macronutrientes"* | MULTIDOMAIN | OrchestratorAgent (Multidomain) | **Sí** (Coach + Nutrition) | Síntesis consolidada con bloque de entrenamiento y bloque nutricional. |
