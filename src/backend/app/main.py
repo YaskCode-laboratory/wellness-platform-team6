@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import uuid
 import logging
-from app import database, schemas, agent
+from app import database, schemas, agent, orchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -325,20 +325,17 @@ def generate_plan(user_id: str):
 @app.post("/api/v1/ai/chat/{user_id}")
 def chat_with_coach(user_id: str, query: schemas.ChatQuery):
     try:
-        if react_agent_engine:
-            res = react_agent_engine.run_react_loop(query.message, athlete_id=user_id)
-            return {
-                "response": res["final_answer"],
-                "react_steps": res["steps"],
-                "total_iterations": res["total_iterations"]
-            }
-        else:
-            response_text = agent.generate_chat_response(user_id, query.message)
-            return {"response": response_text}
+        orch_res = orchestrator._orchestrator_instance.process_user_request(user_id, query.message)
+        return {
+            "response": orch_res["response"],
+            "intent": orch_res["intent"],
+            "delegated_agent": orch_res["delegated_agent"],
+            "status": orch_res["status"]
+        }
     except Exception as e:
         import traceback
         traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error en chat AI: {str(e)}"
+            detail=f"Error en orquestación AI: {str(e)}"
         )

@@ -109,7 +109,7 @@ class InterAgentResponse:
 
 class DelegationTracer:
     """
-    Rastreador centralizado de delegaciones inter-agente y prevención de ciclos de llamadas.
+    Rastreador centralizado de delegaciones inter-agente y prevención de ciclos de llamadas (directos e indirectos).
     """
 
     def __init__(self, max_hops: int = 5):
@@ -122,7 +122,7 @@ class DelegationTracer:
         """
         if message.hop_count > self.max_hops:
             logger.warning(
-                f"DelegationTracer: Se excedió el número máximo de saltos ({self.max_hops}) en trace '{message.trace_id}'"
+                f"DelegationTracer: Se excedió el número máximo de saltos ({self.max_hops}) (actual: {message.hop_count}) en trace '{message.trace_id}'"
             )
             return False
 
@@ -130,13 +130,19 @@ class DelegationTracer:
             self._traces[message.trace_id] = []
 
         history = self._traces[message.trace_id]
-        # Detección de ciclo directo (mismo origen y destino repetido consecutivamente)
+
+        # Detección de ciclos directos e indirectos (e.g. A -> B -> A o A -> B -> C -> A)
+        visited_agents = set()
         for entry in history:
-            if entry["source_agent"] == message.target_agent and entry["target_agent"] == message.source_agent:
-                logger.warning(
-                    f"DelegationTracer: Detectado ciclo de delegación en trace '{message.trace_id}' entre '{message.source_agent}' y '{message.target_agent}'"
-                )
-                return False
+            visited_agents.add(entry["source_agent"])
+            visited_agents.add(entry["target_agent"])
+
+        # Si el agente destino ya participó como origen o destino en la cadena activa de la traza, se detecta un ciclo
+        if message.target_agent in visited_agents:
+            logger.warning(
+                f"DelegationTracer: Detectado ciclo de delegación en trace '{message.trace_id}' hacia '{message.target_agent}'. Agentes en la traza: {visited_agents}"
+            )
+            return False
 
         history.append({
             "task_id": message.task_id,
