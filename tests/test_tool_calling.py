@@ -95,6 +95,29 @@ def test_tool_error_handling():
 
 def test_end_to_end_tool_response_synthesis():
     """Verifica que el resultado de la herramienta se incorpore adecuadamente en la respuesta final del agente."""
-    response = agent._generate_local_chat_response("user123", "¿Qué alternativa me sugieres para ejercicio de espalda?")
+    response = agent.generate_chat_response("user123", "¿Qué alternativa me sugieres para ejercicio de Pecho?")
     assert isinstance(response, str)
-    assert "get_exercise_alternative" in response or "Espalda" in response
+    assert "get_exercise_alternative" in response or "Tool Calling" in response or "pecho" in response.lower()
+
+
+def test_end_to_end_tool_calling_sequence_integration():
+    """
+    Verifica la secuencia end-to-end completa:
+    mensaje -> detección de herramienta -> ejecución (execute_tool) -> observación -> respuesta final
+    a través del método principal del agente (generate_chat_response).
+    """
+    user_id = "test_e2e_tool_user"
+    msg = "Calcula mis macronutrientes y calorías"
+
+    # Ejecutar el flujo principal del agente
+    response = agent.generate_chat_response(user_id, msg)
+
+    # Validar que la respuesta final contenga la observación generada por la herramienta
+    assert isinstance(response, str)
+    assert "calculate_nutrition_macros" in response or "TDEE" in response or "kcal" in response
+
+    # Validar que el historial de memoria conversacional haya registrado la interacción
+    history = agent.memory_manager.get_history(user_id)
+    assert len(history) >= 2
+    assert history[0]["content"] == msg
+

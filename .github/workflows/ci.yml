@@ -26,7 +26,7 @@ jobs:
           if [ -f src/backend/requirements.txt ]; then pip install -r src/backend/requirements.txt; fi
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run Backend Unit Tests
+      - name: Run Pytest Test Suite
         env:
           PYTHONPATH: src/backend
         run: |

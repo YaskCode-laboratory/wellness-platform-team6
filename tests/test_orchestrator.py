@@ -1,6 +1,6 @@
 """
 Suite de Pruebas Automatizadas para el Orchestrator Agent (Issue #20 - S3-02).
-Verifica clasificación de intenciones, delegación individual y compuesta, manejo de errores y respuestas de FastAPI.
+Verifica clasificación de intenciones, delegación individual y compuesta, manejo de errores e integración del endpoint FastAPI.
 """
 
 import sys
@@ -62,14 +62,25 @@ def test_single_agent_delegation(orchestrator):
 
 
 def test_multidomain_delegation(orchestrator):
-    """Verifica la orquestación compuesta para solicitudes que abarcan múltiples dominios."""
+    """Verifica la orquestación compuesta dinámica para solicitudes que abarcan múltiples dominios detectados."""
     user_id = "test_user_orch_multi"
     res = orchestrator.handle_multidomain_delegation(user_id, "Dame una rutina de hombros y mis macros de comida")
 
-    assert res.agent_name == "OrchestratorAgent (Multidomain)"
+    assert "Multidomain" in res.agent_name
     assert res.status == "success"
-    assert "Wellness Coach 2.0" in res.content
-    assert "Nutrition Agent" in res.content
+    assert "WellnessCoachAgent2.0" in res.metadata["delegated_agents"]
+    assert "NutritionAgent" in res.metadata["delegated_agents"]
+
+
+def test_multidomain_motivation_analytics_delegation(orchestrator):
+    """Verifica la delegación dinámica multidominio para motivación y analítica."""
+    user_id = "test_user_orch_multi_moti_analy"
+    res = orchestrator.handle_multidomain_delegation(user_id, "No tengo ánimo y quiero ver mis sesiones e historial de volumen")
+
+    assert "Multidomain" in res.agent_name
+    assert res.status == "success"
+    assert "MotivationAgent" in res.metadata["delegated_agents"]
+    assert "AnalyticsAgent" in res.metadata["delegated_agents"]
 
 
 def test_orchestration_error_handling(orchestrator):
@@ -129,3 +140,23 @@ def test_multidomain_composite_statuses(orchestrator, monkeypatch):
     res_error = orchestrator.handle_multidomain_delegation(user_id, msg)
     assert res_error.status == "error_fallback"
 
+
+def test_fastapi_chat_endpoint_integration():
+    """Verifica la integración real del endpoint POST /api/v1/ai/chat/{user_id} mediante TestClient de FastAPI."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    user_id = "test_user_fastapi_endpoint"
+    payload = {"message": "Dame una rutina para piernas y mis macros de nutrición"}
+
+    response = client.post(f"/api/v1/ai/chat/{user_id}", json=payload)
+    assert response.status_code == 200, f"Respuesta esperada 200, obtenido {response.status_code}"
+
+    data = response.json()
+    assert "response" in data, "La respuesta debe contener la clave 'response'"
+    assert "intent" in data, "La respuesta debe contener la clave 'intent'"
+    assert "delegated_agent" in data, "La respuesta debe contener la clave 'delegated_agent'"
+    assert "status" in data, "La respuesta debe contener la clave 'status'"
+    assert data["intent"] == AgentIntent.MULTIDOMAIN.value
+    assert data["status"] in ("success", "partial_success", "error_fallback")

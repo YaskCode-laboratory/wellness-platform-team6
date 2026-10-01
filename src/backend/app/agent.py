@@ -13,6 +13,7 @@ from app.wellness_agent.providers import LLMProviderManager
 from app.wellness_agent.memory import ConversationMemoryManager
 from app.wellness_agent.tools import AgentToolRegistry
 from app.wellness_agent.reasoning import ReasoningEngine
+from app.react_agent import ReActAgent
 
 logger = logging.getLogger(__name__)
 
@@ -23,12 +24,13 @@ provider_manager = LLMProviderManager()
 memory_manager = ConversationMemoryManager()
 tool_registry = AgentToolRegistry()
 reasoning_engine = ReasoningEngine(tool_registry=tool_registry)
+react_agent = ReActAgent(tool_registry=tool_registry)
 
 
 class WellnessCoachAgent:
     """
     Agente Orquestador Inteligente para Wellness Lift.
-    Integrado con memoria conversacional de doble nivel, registro de herramientas y proveedores LLM.
+    Integrado con memoria conversacional de doble nivel, registro de herramientas, motor de razonamiento ReAct y Agente Especializado.
     """
 
     def __init__(self):
@@ -36,6 +38,7 @@ class WellnessCoachAgent:
         self.memory = memory_manager
         self.tools = tool_registry
         self.reasoning = reasoning_engine
+        self.react = react_agent
 
     def generate_routine(self, user_id: str) -> Dict[str, Any]:
         """Genera una rutina de entrenamiento semanal balanceada considerando historial y memoria."""
@@ -61,11 +64,30 @@ class WellnessCoachAgent:
         logger.info(f"Usando motor local determinista para rutina de {user_id}")
         return self.reasoning.generate_local_routine(user_id, extracted_facts=extracted_facts)
 
-    def generate_response(self, user_id: str, message: str) -> str:
-        """Genera una respuesta en la conversación delegando en el Agente Especializado del Equipo 6."""
+    def process_specialized_request(self, user_id: str, message: str) -> Dict[str, Any]:
+        """Procesa una solicitud especializada preservando el diccionario con status, in_domain y response."""
         from app.wellness_agent.coach_specialist import _specialist_instance
-        res = _specialist_instance.process_specialized_request(user_id, message)
-        return res["response"]
+        return _specialist_instance.process_specialized_request(user_id, message)
+
+    def generate_response(self, user_id: str, message: str) -> str:
+        """Genera una respuesta en la conversación delegando en el Agente Especializado del Equipo 6 o ReAct."""
+        try:
+            from app.wellness_agent.coach_specialist import _specialist_instance
+            if _specialist_instance.is_query_in_domain(message):
+                res = _specialist_instance.process_specialized_request(user_id, message)
+                if res and res.get("status") == "success" and res.get("response"):
+                    return res["response"]
+        except Exception as e:
+            logger.warning(f"Fallback desde specialist en generate_response: {e}")
+
+        self.memory.add_message(user_id, "user", message)
+        
+        # Ejecución del ciclo ReAct con selección de herramientas y síntesis
+        react_result = self.react.run_react_loop(message, athlete_id=user_id)
+        response_text = react_result["final_answer"]
+        self.memory.add_message(user_id, "assistant", response_text)
+        logger.info(f"Respuesta generada con ciclo ReAct para usuario {user_id}")
+        return response_text
 
     def process_interagent_message(self, message: Any) -> Any:
         """Procesa una solicitud InterAgentMessage delegando en el Agente Especializado del Equipo 6."""
