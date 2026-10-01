@@ -96,7 +96,7 @@ class MultiAgentFlowEvaluator:
                 id="TC-MA-02",
                 name="Delegación Directa a Nutrition Agent (Cálculo de Macros y TDEE)",
                 user_id="athlete_02",
-                prompt="Calcula mis calorías y macronutrientes para mi dieta de volumen",
+                prompt="Calcula mis calorías y macronutrientes para mi dieta diaria",
                 expected_intent=AgentIntent.NUTRITION.value,
                 expected_primary_agent="NutritionAgent",
                 requires_collaboration=False,
