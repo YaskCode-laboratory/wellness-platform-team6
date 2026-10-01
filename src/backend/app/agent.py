@@ -89,6 +89,11 @@ class WellnessCoachAgent:
         logger.info(f"Respuesta generada con ciclo ReAct para usuario {user_id}")
         return response_text
 
+    def process_interagent_message(self, message: Any) -> Any:
+        """Procesa una solicitud InterAgentMessage delegando en el Agente Especializado del Equipo 6."""
+        from app.wellness_agent.coach_specialist import _specialist_instance
+        return _specialist_instance.process_interagent_message(message)
+
 
 _agent_instance = WellnessCoachAgent()
 
